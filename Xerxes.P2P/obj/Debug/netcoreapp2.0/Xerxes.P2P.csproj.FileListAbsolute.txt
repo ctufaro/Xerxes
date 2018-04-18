@@ -1,0 +1,11 @@
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.P2P.deps.json
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.P2P.runtimeconfig.json
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.P2P.runtimeconfig.dev.json
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.P2P.dll
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.P2P.pdb
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.csprojResolveAssemblyReference.cache
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.csproj.CoreCompileInputs.cache
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.AssemblyInfoInputs.cache
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.AssemblyInfo.cs
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.dll
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.pdb
