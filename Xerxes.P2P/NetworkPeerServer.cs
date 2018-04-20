@@ -6,19 +6,23 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Xerxes.Utilities;
+using NBitcoin;
+using NBitcoin.Protocol;
 
 namespace Xerxes.P2P
 {
     public class NetworkPeerServer : IDisposable
     {
         /// <summary>Instance logger.</summary>
-        //private readonly ILogger logger;
+        private readonly ILogger logger;
 
         /// <summary>Factory for creating P2P network peers.</summary>
         //private readonly INetworkPeerFactory networkPeerFactory;
 
         /// <summary>Specification of the network the node runs on - regtest/testnet/mainnet.</summary>
-        //public Network Network { get; private set; }
+        public Network Network { get; private set; }
 
         /// <summary>Version of the protocol that the server is running.</summary>
         //public ProtocolVersion Version { get; private set; }
@@ -47,6 +51,42 @@ namespace Xerxes.P2P
 
         /// <summary>Task accepting new clients in a loop.</summary>
         private Task acceptTask;
+
+        public NetworkPeerServer(Network network,
+            IPEndPoint localEndPoint,
+            IPEndPoint externalEndPoint,
+            ProtocolVersion version,
+            ILoggerFactory loggerFactory
+            //,NetworkPeerFactory networkPeerFactory
+            )
+        {
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{localEndPoint}] ");
+            Console.WriteLine("({0}:{1},{2}:{3},{4}:{5})", nameof(network), network, nameof(localEndPoint), localEndPoint, nameof(externalEndPoint), externalEndPoint, nameof(version), version);
+
+            //this.networkPeerFactory = networkPeerFactory;
+            //this.networkPeerDisposer = new NetworkPeerDisposer(loggerFactory);
+
+            //this.InboundNetworkPeerConnectionParameters = new NetworkPeerConnectionParameters();
+
+            this.LocalEndpoint = Utils.EnsureIPv6(localEndPoint);
+            this.ExternalEndpoint = Utils.EnsureIPv6(externalEndPoint);
+
+            this.Network = network;
+            //this.Version = version;
+
+            this.serverCancel = new CancellationTokenSource();
+
+            this.tcpListener = new TcpListener(this.LocalEndpoint);
+            this.tcpListener.Server.LingerState = new LingerOption(true, 0);
+            this.tcpListener.Server.NoDelay = true;
+            this.tcpListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+
+            this.acceptTask = Task.CompletedTask;
+
+            Console.WriteLine("Network peer server ready to listen on '{0}'.", this.LocalEndpoint);
+
+            Console.WriteLine("(-)");
+        }
         public void Dispose()
         {
             //throw new NotImplementedException();

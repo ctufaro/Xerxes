@@ -9,3 +9,8 @@ C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.
 C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.AssemblyInfo.cs
 C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.dll
 C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.pdb
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\NBitcoin.dll
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.Utilities.dll
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\NBitcoin.pdb
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.Utilities.pdb
+C:\Users\Chris\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.csproj.CopyComplete
