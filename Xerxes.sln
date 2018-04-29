@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xerxes.P2P", "Xerxes.P2P\Xerxes.P2P.csproj", "{7D209B55-89B5-4D4D-BDA8-ADB25A35C8A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.P2P", "Xerxes.P2P\Xerxes.P2P.csproj", "{6D74DB8F-9092-4A5D-9408-D7A457816BAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.Utilities", "Xerxes.Utilities\Xerxes.Utilities.csproj", "{42A0C7F3-5FA4-4159-9E75-4F1F72BD029B}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NBitcoin", "..\StratisBitcoinFullNode\src\NBitcoin\NBitcoin.csproj", "{54957C40-CA2F-45C8-91EE-66143057DE82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.P2P.Driver", "Xerxes.P2P.Driver\Xerxes.P2P.Driver.csproj", "{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,18 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7D209B55-89B5-4D4D-BDA8-ADB25A35C8A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D209B55-89B5-4D4D-BDA8-ADB25A35C8A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D209B55-89B5-4D4D-BDA8-ADB25A35C8A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D209B55-89B5-4D4D-BDA8-ADB25A35C8A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{42A0C7F3-5FA4-4159-9E75-4F1F72BD029B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{42A0C7F3-5FA4-4159-9E75-4F1F72BD029B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{42A0C7F3-5FA4-4159-9E75-4F1F72BD029B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{42A0C7F3-5FA4-4159-9E75-4F1F72BD029B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54957C40-CA2F-45C8-91EE-66143057DE82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54957C40-CA2F-45C8-91EE-66143057DE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54957C40-CA2F-45C8-91EE-66143057DE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54957C40-CA2F-45C8-91EE-66143057DE82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D74DB8F-9092-4A5D-9408-D7A457816BAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D74DB8F-9092-4A5D-9408-D7A457816BAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D74DB8F-9092-4A5D-9408-D7A457816BAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D74DB8F-9092-4A5D-9408-D7A457816BAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
