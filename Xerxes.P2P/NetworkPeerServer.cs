@@ -16,7 +16,7 @@ namespace Xerxes.P2P
             listener = new TcpListener(address, port);
             listener.Server.LingerState = new LingerOption(true, 0);
             listener.Server.NoDelay = true;
-            listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            //listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             listener.Start();
 
             accept = true;
