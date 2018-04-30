@@ -14,7 +14,7 @@ namespace Xerxes.P2P.Driver
             {
                 string server = args[0];
                 int port = Int32.Parse(args[1]);
-                NetworkPeerServer.StartServer("192.168.1.12", 5678); // Start the server  
+                NetworkPeerServer.StartServer(server, port); // Start the server  
                 NetworkPeerServer.Listen(); // Start listening. 
             }
         }
