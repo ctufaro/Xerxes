@@ -10,10 +10,14 @@ namespace Xerxes.P2P
         private static TcpListener listener { get; set; }
         private static bool accept { get; set; } = false;
 
-        public static void StartServer(string server, int port)
-        {
-            IPAddress address = IPAddress.Parse(server);
-            listener = new TcpListener(address, port);
+        public static void StartServer(int port, string address = null)
+        {      
+            IPAddress ipAddr = IPAddress.Loopback;
+
+            if(address!=null)
+                ipAddr = IPAddress.Parse(address);                
+            
+            listener = new TcpListener(ipAddr, port);
             listener.Server.LingerState = new LingerOption(true, 0);
             listener.Server.NoDelay = true;
             //listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
@@ -21,7 +25,7 @@ namespace Xerxes.P2P
 
             accept = true;
 
-            Console.WriteLine($"Server started at {server}:{port}");
+            Console.WriteLine("Server started at {0}:{1}", ipAddr.ToString(), port);
         }
 
         public static void Listen()
