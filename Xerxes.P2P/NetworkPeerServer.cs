@@ -12,7 +12,7 @@ namespace Xerxes.P2P
 
         public static void StartServer(int port, string address = null)
         {      
-            IPAddress ipAddr = IPAddress.Loopback;
+            IPAddress ipAddr = IPAddress.Parse(GetLocalIPAddress());
 
             if(address!=null)
                 ipAddr = IPAddress.Parse(address);                
@@ -26,6 +26,19 @@ namespace Xerxes.P2P
             accept = true;
 
             Console.WriteLine("Server started at {0}:{1}", ipAddr.ToString(), port);
+        }
+
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
         }
 
         public static void Listen()
