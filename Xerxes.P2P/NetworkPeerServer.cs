@@ -14,8 +14,10 @@ namespace Xerxes.P2P
         {
             IPAddress address = IPAddress.Parse(server);
             listener = new TcpListener(address, port);
+            listener.Server.LingerState = new LingerOption(true, 0);
+            listener.Server.NoDelay = true;
+            listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
 
-            listener.Start();
             accept = true;
 
             Console.WriteLine($"Server started at {server}:{port}");
