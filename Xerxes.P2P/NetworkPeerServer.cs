@@ -2,78 +2,42 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Xerxes.P2P
 {
     public class NetworkPeerServer
     {
-        private static TcpListener listener { get; set; }
-        private static bool accept { get; set; } = false;
+        /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
+        private readonly CancellationTokenSource serverCancel;
 
-        public static void StartServer(int port, string address = null)
-        {      
-            IPAddress ipAddr = IPAddress.Parse(GetLocalIPAddress());
+        /// <summary>TCP server listener accepting inbound connections.</summary>
+        private readonly TcpListener tcpListener;
 
-            if(address!=null)
-                ipAddr = IPAddress.Parse(address);                
-            
-            listener = new TcpListener(ipAddr, port);
-            listener.Server.LingerState = new LingerOption(true, 0);
-            listener.Server.NoDelay = true;
-            //listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            listener.Start();
+        /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
+        public IPEndPoint LocalEndpoint { get; private set; }
 
-            accept = true;
-
-            Console.WriteLine("Server started at {0}:{1}", ipAddr.ToString(), port);
+        public NetworkPeerServer(IPEndPoint localEndPoint)
+        {
+            this.LocalEndpoint = localEndPoint;
+            this.tcpListener = new TcpListener(this.LocalEndpoint);
+            this.tcpListener.Server.LingerState = new LingerOption(true, 0);
+            this.tcpListener.Server.NoDelay = true;
         }
 
-        public static string GetLocalIPAddress()
+        public async void Listen()
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
+            try
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                Console.WriteLine("Listening for clients on '{0}'.", this.LocalEndpoint);
+                this.tcpListener.Start();
+                while (!this.serverCancel.IsCancellationRequested)
                 {
-                    return ip.ToString();
+                    TcpClient tcpClient = await this.tcpListener.AcceptTcpClientAsync();
+                    Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
                 }
             }
-            throw new Exception("No network adapters with an IPv4 address in the system!");
-        }
-
-        public static void Listen()
-        {
-            if (listener != null && accept)
-            {
-
-                // Continue listening.  
-                while (true)
-                {
-                    Console.WriteLine("Listening for clients...");
-                    var clientTask = listener.AcceptTcpClientAsync(); // Get the client  
-
-                    if (clientTask.Result != null)
-                    {
-                        Console.WriteLine("Client connected. Waiting for data.");
-                        var client = clientTask.Result;
-                        string message = "";
-
-                        while (message != null && !message.StartsWith("quit"))
-                        {
-                            byte[] data = Encoding.ASCII.GetBytes("Send next data: [enter 'quit' to terminate] ");
-                            client.GetStream().Write(data, 0, data.Length);
-
-                            byte[] buffer = new byte[1024];
-                            client.GetStream().Read(buffer, 0, buffer.Length);
-
-                            message = Encoding.ASCII.GetString(buffer);
-                            Console.WriteLine(message);
-                        }
-                        Console.WriteLine("Closing connection.");
-                        client.GetStream().Dispose();
-                    }
-                }
-            }
+            catch { }
         }
     }
 }
