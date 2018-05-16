@@ -6,6 +6,8 @@ using System.Threading;
 
 namespace Xerxes.P2P
 {
+    //dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
+    //dotnet run --project <csproj location>
     public class NetworkPeerServer
     {
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
@@ -23,6 +25,7 @@ namespace Xerxes.P2P
             this.tcpListener = new TcpListener(this.LocalEndpoint);
             this.tcpListener.Server.LingerState = new LingerOption(true, 0);
             this.tcpListener.Server.NoDelay = true;
+            this.serverCancel = new CancellationTokenSource();
         }
 
         public async void Listen()
@@ -35,6 +38,8 @@ namespace Xerxes.P2P
                 {
                     TcpClient tcpClient = await this.tcpListener.AcceptTcpClientAsync();
                     Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
+                    NetworkMessage networkMessage = new NetworkMessage(tcpClient.GetStream());
+                    networkMessage.StartConversation();
                 }
             }
             catch { }

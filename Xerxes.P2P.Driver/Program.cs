@@ -15,7 +15,8 @@ namespace Xerxes.P2P.Driver
             }
             else
             {
-                NetworkClient networkClient = new NetworkClient("127.0.0.1", 1234);
+                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, 1234);
+                NetworkClient networkClient = new NetworkClient(iPEndPoint);
                 networkClient.Start();
             }
 
