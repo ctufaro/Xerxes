@@ -8,13 +8,10 @@ namespace Xerxes.P2P
 {
     ///https://en.bitcoin.it/wiki/Satoshi_Client_Node_Discovery
     public class NetworkPeerDiscovery
-    {
-        List<NetworkPeer> connectedPeers = new List<NetworkPeer>();
-        
-        public NetworkPeerDiscovery(List<INetworkPeer> trustedPeers)
+    {        
+        public NetworkPeerDiscovery()
         {            
-            foreach(NetworkPeer n in trustedPeers)
-                connectedPeers.Add(n);
+
         }
     }
 }

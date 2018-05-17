@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Xerxes.P2P.Driver
 {
@@ -7,11 +8,13 @@ namespace Xerxes.P2P.Driver
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            if (args.Length > 0)
             {
                 IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, 1234);
                 NetworkPeerServer networkPeerServer = new NetworkPeerServer(iPEndPoint);
-                networkPeerServer.Listen();
+                Task.Run(()=>networkPeerServer.ReceivePeers());
+                
+                //Task.Run(()=>networkPeerServer.SeekPeers());
             }
             else
             {

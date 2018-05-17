@@ -1,23 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xerxes.P2P
 {
+    //dotnet build
     //dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
     //dotnet run --project <csproj location>
     public class NetworkPeerServer
     {
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
+        
 
         /// <summary>TCP server listener accepting inbound connections.</summary>
-        private readonly TcpListener tcpListener;
+        private readonly TcpListener tcpListener;      
 
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
+        
+        /// <summary>List of all inbound peers.</summary>
+        private List<NetworkPeer> peers;
+        /// <summary>Task accepting new clients in a loop.</summary>
+        private Task acceptTask;
 
         public NetworkPeerServer(IPEndPoint localEndPoint)
         {
@@ -25,24 +34,68 @@ namespace Xerxes.P2P
             this.tcpListener = new TcpListener(this.LocalEndpoint);
             this.tcpListener.Server.LingerState = new LingerOption(true, 0);
             this.tcpListener.Server.NoDelay = true;
-            this.serverCancel = new CancellationTokenSource();
+            this.serverCancel = new CancellationTokenSource();            
+            this.peers = new List<NetworkPeer>();
         }
 
-        public async void Listen()
+        public void ReceivePeers()    
         {
             try
             {
-                Console.WriteLine("Listening for clients on '{0}'.", this.LocalEndpoint);
+                Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
+                this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 this.tcpListener.Start();
+                this.acceptTask = this.AcceptClientsAsync();
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }        
+
+        public async Task AcceptClientsAsync()
+        {
+            try
+            {                
                 while (!this.serverCancel.IsCancellationRequested)
                 {
-                    TcpClient tcpClient = await this.tcpListener.AcceptTcpClientAsync();
+                    TcpClient tcpClient = await Task.Run(() =>
+                    {
+                        try
+                        {
+                            Task<TcpClient> acceptClientTask = this.tcpListener.AcceptTcpClientAsync();
+                            acceptClientTask.Wait(this.serverCancel.Token);
+                            return acceptClientTask.Result;
+                        }
+                        catch (Exception exception)
+                        {
+                            // Record the error.
+                            throw exception;
+                        }
+                    }).ConfigureAwait(false);
                     Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
-                    NetworkMessage networkMessage = new NetworkMessage(tcpClient.GetStream());
-                    networkMessage.StartConversation();
+                    this.peers.Add(new NetworkPeer(tcpClient));
+
+                    //if peer count == 2, lets introduce them
+                    if(peers.Count==2)
+                    {
+                        Console.WriteLine("Lets make some introductions");
+                        NetworkPeer p0 = peers[0];
+                        NetworkPeer p1 = peers[1];
+                        //send message to clients
+                        var port0 = ((IPEndPoint)p1.tcpClient.Client.RemoteEndPoint).Port;
+                        var port1 = ((IPEndPoint)p0.tcpClient.Client.RemoteEndPoint).Port;
+                        p0.SendMessage(string.Format("JOIN---127.0.0.1---{0}", port1), p1.tcpClient.GetStream());
+                        p1.SendMessage(string.Format("JOIN---127.0.0.1---{0}", port0), p0.tcpClient.GetStream());                                                                       
+                    }
+
+                    NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
+                    Task conversation = networkPeerConnection.StartConversationAsync();
                 }
             }
             catch { }
         }
+
+
     }
 }

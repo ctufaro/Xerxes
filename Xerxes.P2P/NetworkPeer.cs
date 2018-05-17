@@ -8,16 +8,26 @@ namespace Xerxes.P2P
 {    
     public class NetworkPeer:INetworkPeer
     {
-        public IPAddress ipAddr{ get;set;}
-        public int port{get;set;}
-        public NetworkPeer()
-        {   
-            
-        }
-        public NetworkPeer(string ipAddr, int port)
+        public IPEndPoint ipEnd{ get;set;}
+        public string id {get;set;}
+        public TcpClient tcpClient { get;set; }
+
+        public NetworkPeer(IPEndPoint ipEnd, string id, TcpClient tcpClient)
         {
-            this.ipAddr = IPAddress.Parse(ipAddr);
-            this.port = port;
+            this.ipEnd = ipEnd;
+            this.id = id;
+            this.tcpClient = tcpClient;
+        }
+
+        public NetworkPeer(TcpClient tcpClient)
+        {           
+            this.tcpClient = tcpClient;
+        }
+
+        public async void SendMessage(string response, NetworkStream receiver)
+        {
+            byte[] serverResponseBytes = Encoding.UTF8.GetBytes(response);
+            await receiver.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
         }
     }
 }

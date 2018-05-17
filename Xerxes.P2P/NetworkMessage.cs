@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,48 +11,30 @@ namespace Xerxes.P2P
 {
     public class NetworkMessage
     {
-        public NetworkStream networkStream { get; private set; }
-
-        private string[] messages = new string[]{"Nice to meet you", "What do you hear", "Wow that is crazy"};
-
-        private int count;
-
-        public NetworkMessage(NetworkStream networkStream)
+        public static byte[] NetworkMessageToByteArray(NetworkMessage obj)
         {
-            this.count = 0;
-            this.networkStream = networkStream;
-        }
-
-        public async void StartConversation()
-        {
-            await Task.Run(async ()=>{
-                while(true)
-                {
-                    await ReceiveClientMessage();
-                    await SendClientMessage();
-                }
-            });
-        }
-
-        private async Task ReceiveClientMessage(){
-            var buffer = new byte[4096];
-            var byteCount = await this.networkStream.ReadAsync(buffer, 0, buffer.Length);
-            var request = Encoding.UTF8.GetString(buffer, 0, byteCount);
-            System.Console.WriteLine("[Server] Client wrote {0}", request);
-        } 
-
-        private async Task SendClientMessage(){
-            if (count < messages.Length)
-            {                
-                string response = messages[count];
-                count = Interlocked.Increment(ref count);
-                byte[] serverResponseBytes = Encoding.UTF8.GetBytes(response);
-                await this.networkStream.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
             }
-        }      
+        }
+
+        public static NetworkMessage ByteArrayToNetworkMessage(byte[] arrBytes)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
+                memStream.Write(arrBytes, 0, arrBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var obj = binForm.Deserialize(memStream) as NetworkMessage;
+                return obj;
+            }
+        }        
     }
 
-    public enum NetworkMessageType
+    public enum NetworkStateType
     {
         /// <summary>Initial state of an outbound peer.</summary>
         Created = 0,
@@ -64,5 +48,12 @@ namespace Xerxes.P2P
         Offline,
         /// <summary>An error occurred during a network operation.</summary>
         Failed
+    }
+
+    public enum NetworkMessageType
+    {
+        /// <summary>Simple Acknowledgement Message</summary>
+        Ack = 0
+
     }
 }
