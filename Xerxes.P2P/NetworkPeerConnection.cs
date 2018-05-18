@@ -77,6 +77,23 @@ namespace Xerxes.P2P
             }
         }
 
+        public async Task ReceiveConversationAsync()
+        {
+            try
+            {
+                while (!this.cancellationSource.Token.IsCancellationRequested)
+                {
+                    Thread.Sleep(1000);
+                    await SendMessageAsync();
+                    await ReceiveMessageAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error: " + e.ToString());
+            }
+        }
+
     }
     
 }

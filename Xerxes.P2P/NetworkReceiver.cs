@@ -11,7 +11,7 @@ namespace Xerxes.P2P
     //dotnet build
     //dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
     //dotnet run --project <csproj location>
-    public class NetworkPeerServer
+    public class NetworkReceiver
     {
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
@@ -28,7 +28,7 @@ namespace Xerxes.P2P
         /// <summary>Task accepting new clients in a loop.</summary>
         private Task acceptTask;
 
-        public NetworkPeerServer(IPEndPoint localEndPoint)
+        public NetworkReceiver(IPEndPoint localEndPoint)
         {
             this.LocalEndpoint = localEndPoint;
             this.tcpListener = new TcpListener(this.LocalEndpoint);
@@ -75,20 +75,6 @@ namespace Xerxes.P2P
                     }).ConfigureAwait(false);
                     Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
                     this.peers.Add(new NetworkPeer(tcpClient));
-
-                    //if peer count == 2, lets introduce them
-                    if(peers.Count==2)
-                    {
-                        Console.WriteLine("Lets make some introductions");
-                        NetworkPeer p0 = peers[0];
-                        NetworkPeer p1 = peers[1];
-                        //send message to clients
-                        var port0 = ((IPEndPoint)p1.tcpClient.Client.RemoteEndPoint).Port;
-                        var port1 = ((IPEndPoint)p0.tcpClient.Client.RemoteEndPoint).Port;
-                        p0.SendMessage(string.Format("JOIN---127.0.0.1---{0}", port1), p1.tcpClient.GetStream());
-                        p1.SendMessage(string.Format("JOIN---127.0.0.1---{0}", port0), p0.tcpClient.GetStream());                                                                       
-                    }
-
                     NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
                     Task conversation = networkPeerConnection.StartConversationAsync();
                 }

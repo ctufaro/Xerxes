@@ -8,22 +8,26 @@ namespace Xerxes.P2P.Driver
     {
         static void Main(string[] args)
         {
-            if (args.Length > 0)
+            if (args.Length == 2)
             {
-                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, 1234);
-                NetworkPeerServer networkPeerServer = new NetworkPeerServer(iPEndPoint);
-                Task.Run(()=>networkPeerServer.ReceivePeers());
-                
-                //Task.Run(()=>networkPeerServer.SeekPeers());
+                int receivePort = Int32.Parse(args[0]);
+                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, receivePort);
+                NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
+                Task.Run(()=> networkReceiver.ReceivePeers());
+
+                int seekPort = Int32.Parse(args[1]);
+                IPEndPoint singleSeekPoint = new IPEndPoint(IPAddress.Loopback, seekPort);
+                NetworkSeeker networkSeeker = new NetworkSeeker(singleSeekPoint);
+                Task.Run(()=> networkSeeker.SeekPeers());
+
+                Console.ReadLine();
             }
             else
             {
-                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, 1234);
-                NetworkClient networkClient = new NetworkClient(iPEndPoint);
-                networkClient.Start();
+                Console.WriteLine("Two Arguments required <receiveport> <seekport>");
             }
 
-            Console.ReadLine();
+            
         }
     }
 }
