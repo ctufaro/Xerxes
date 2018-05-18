@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net;
+using CommandLine;
 using System.Threading.Tasks;
+using CommandLine.Text;
 
 namespace Xerxes.P2P.Driver
 {
@@ -8,26 +10,40 @@ namespace Xerxes.P2P.Driver
     {
         static void Main(string[] args)
         {
-            if (args.Length == 2)
-            {
-                int receivePort = Int32.Parse(args[0]);
-                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, receivePort);
-                NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
-                Task.Run(()=> networkReceiver.ReceivePeers());
+            TryParseArgs(args);
+        }
 
-                int seekPort = Int32.Parse(args[1]);
-                IPEndPoint singleSeekPoint = new IPEndPoint(IPAddress.Loopback, seekPort);
+        private static void Start(Options options)
+        {
+            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, options.ReceivePort);
+            NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
+            Task.Run(()=> networkReceiver.ReceivePeers());
+
+            if(options.SeekPort!=null)
+            {
+                IPEndPoint singleSeekPoint = new IPEndPoint(IPAddress.Loopback, options.SeekPort.Value);
                 NetworkSeeker networkSeeker = new NetworkSeeker(singleSeekPoint);
                 Task.Run(()=> networkSeeker.SeekPeers());
-
-                Console.ReadLine();
             }
-            else
+
+            Console.ReadLine();
+        }
+
+        private static void TryParseArgs(string[] args)
+        {
+            var parserResult = CommandLine.Parser.Default.ParseArguments<Options>(args);
+            parserResult.WithParsed<Options>(opts => Start(opts));
+            parserResult.WithNotParsed<Options>(errs =>
             {
-                Console.WriteLine("Two Arguments required <receiveport> <seekport>");
-            }
-
-            
+                var helpText = HelpText.AutoBuild(parserResult, h =>
+                {
+                    return HelpText.DefaultParsingErrorsHandler(parserResult, h);
+                }, e =>
+                {
+                    return e;
+                });
+                Console.WriteLine(helpText);
+            });
         }
     }
 }

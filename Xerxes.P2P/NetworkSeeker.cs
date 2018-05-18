@@ -26,14 +26,7 @@ namespace Xerxes.P2P
 
         public void SeekPeers()
         {
-            if (SingleSeekPoint.Port == 0)
-            {
-                Console.WriteLine("Terminating Seeker");
-            }
-            else
-            {
-                SeekPeersAsync();
-            }
+            SeekPeersAsync();
         }
 
         public async void SeekPeersAsync()
