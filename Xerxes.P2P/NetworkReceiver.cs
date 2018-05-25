@@ -28,6 +28,8 @@ namespace Xerxes.P2P
         /// <summary>Task accepting new clients in a loop.</summary>
         private Task acceptTask;
 
+        private bool infected = false;
+
         public NetworkReceiver(IPEndPoint localEndPoint)
         {
             this.LocalEndpoint = localEndPoint;
@@ -38,22 +40,22 @@ namespace Xerxes.P2P
             this.peers = new List<NetworkPeer>();
         }
 
-        public void ReceivePeers()    
+        public void ReceivePeers(bool continuously)    
         {
             try
             {
                 Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
                 this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 this.tcpListener.Start();
-                this.acceptTask = this.AcceptClientsAsync();
+                this.acceptTask = (continuously) ? this.AcceptClientsLoopAsync() : this.AcceptClientsSingleAsync();
             }
             catch (Exception e)
             {
                 throw e;
             }
-        }        
-
-        public async Task AcceptClientsAsync()
+        }      
+                
+        public async Task AcceptClientsLoopAsync()
         {
             try
             {                
@@ -81,6 +83,51 @@ namespace Xerxes.P2P
             }
             catch { }
         }
+
+        public async Task AcceptClientsSingleAsync()
+        {
+            try
+            { 
+                while(true)
+                {               
+                    TcpClient tcpClient = await Task.Run(() =>
+                    {
+                        try
+                        {
+                            Task<TcpClient> acceptClientTask = this.tcpListener.AcceptTcpClientAsync();
+                            acceptClientTask.Wait(this.serverCancel.Token);
+                            return acceptClientTask.Result;
+                        }
+                        catch (Exception exception)
+                        {
+                            // Record the error.
+                            throw exception;
+                        }
+                    }).ConfigureAwait(false);
+                    var buffer = new byte[4096];
+                    NetworkStream str = tcpClient.GetStream();
+                    var byteCount = await str.ReadAsync(buffer, 0, buffer.Length);
+                    var request = Encoding.UTF8.GetString(buffer, 0, byteCount);
+                    
+                    System.Console.BackgroundColor = ConsoleColor.Red;
+                    System.Console.Clear();
+                    System.Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
+                    System.Console.WriteLine("INFECTED! Received message {0}", request);
+                    if(!infected)
+                    {
+                        infected = true;
+                        NetworkSeeker networkSeeker = new NetworkSeeker();
+                        Task.Run(() => networkSeeker.StartInfectPeersAsync(request, 1));
+                    }
+                    //tcpClient.Close();
+                    System.Console.WriteLine("Close connection");
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }        
 
 
     }
