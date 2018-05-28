@@ -3,6 +3,7 @@ using System.Net;
 using CommandLine;
 using System.Threading.Tasks;
 using CommandLine.Text;
+using System.Diagnostics;
 
 namespace Xerxes.P2P.Driver
 {
@@ -10,7 +11,14 @@ namespace Xerxes.P2P.Driver
     {
         static void Main(string[] args)
         {
-            TryParseArgs(args);
+            if (Debugger.IsAttached)
+            {
+                Start(new Options { ReceivePort = 1111, Gossip = "hi" });
+            }
+            else
+            {
+                TryParseArgs(args);
+            }
         }
 
         private static void Start(Options options)

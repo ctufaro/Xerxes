@@ -13,9 +13,10 @@ namespace Xerxes.P2P
     //dotnet run --project <csproj location>
     public class NetworkReceiver
     {
-        /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
-        private readonly CancellationTokenSource serverCancel;
+        private static Random r = new Random();
         
+        /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
+        private readonly CancellationTokenSource serverCancel;        
 
         /// <summary>TCP server listener accepting inbound connections.</summary>
         private readonly TcpListener tcpListener;      
@@ -108,8 +109,8 @@ namespace Xerxes.P2P
                     NetworkStream str = tcpClient.GetStream();
                     var byteCount = await str.ReadAsync(buffer, 0, buffer.Length);
                     var request = Encoding.UTF8.GetString(buffer, 0, byteCount);
-                    
-                    System.Console.BackgroundColor = ConsoleColor.Red;
+
+                    System.Console.BackgroundColor = (System.ConsoleColor)r.Next(0, 14);
                     System.Console.Clear();
                     System.Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
                     System.Console.WriteLine("INFECTED! Received message {0}", request);
