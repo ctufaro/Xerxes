@@ -118,7 +118,7 @@ namespace Xerxes.P2P
                     {
                         infected = true;
                         NetworkSeeker networkSeeker = new NetworkSeeker();
-                        Task.Run(() => networkSeeker.StartInfectPeersAsync(request, 1));
+                        await Task.Run(() => networkSeeker.StartInfectPeersAsync(request, 1));
                     }
                     //tcpClient.Close();
                     System.Console.WriteLine("Close connection");
