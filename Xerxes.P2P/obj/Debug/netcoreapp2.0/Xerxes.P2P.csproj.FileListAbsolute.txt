@@ -16,3 +16,5 @@ C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xer
 C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.AssemblyInfo.cs
 C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.dll
 C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\obj\Debug\netcoreapp2.0\Xerxes.P2P.pdb
+C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.Utils.dll
+C:\Users\ctufaro_admin\My Projects\Xerxes\Xerxes.P2P\bin\Debug\netcoreapp2.0\Xerxes.Utils.pdb

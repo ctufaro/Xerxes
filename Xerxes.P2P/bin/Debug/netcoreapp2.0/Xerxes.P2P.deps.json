@@ -7,14 +7,27 @@
   "targets": {
     ".NETCoreApp,Version=v2.0": {
       "Xerxes.P2P/1.0.0": {
+        "dependencies": {
+          "Xerxes.Utils": "1.0.0"
+        },
         "runtime": {
           "Xerxes.P2P.dll": {}
+        }
+      },
+      "Xerxes.Utils/1.0.0": {
+        "runtime": {
+          "Xerxes.Utils.dll": {}
         }
       }
     }
   },
   "libraries": {
     "Xerxes.P2P/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Xerxes.Utils/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

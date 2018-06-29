@@ -196,6 +196,16 @@
         "build": {
           "build/netstandard2.0/NETStandard.Library.targets": {}
         }
+      },
+      "Xerxes.Utils/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Xerxes.Utils.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Xerxes.Utils.dll": {}
+        }
       }
     }
   },
@@ -656,11 +666,17 @@
         "netstandard.library.2.0.0.nupkg.sha512",
         "netstandard.library.nuspec"
       ]
+    },
+    "Xerxes.Utils/1.0.0": {
+      "type": "project",
+      "path": "../Xerxes.Utils/Xerxes.Utils.csproj",
+      "msbuildProject": "../Xerxes.Utils/Xerxes.Utils.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.0": [
-      "Microsoft.NETCore.App >= 2.0.0"
+      "Microsoft.NETCore.App >= 2.0.0",
+      "Xerxes.Utils >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -670,11 +686,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\Xerxes.P2P.csproj",
+      "projectUniqueName": "C:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\Xerxes.P2P.csproj",
       "projectName": "Xerxes.P2P",
-      "projectPath": "c:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\Xerxes.P2P.csproj",
+      "projectPath": "C:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\Xerxes.P2P.csproj",
       "packagesPath": "C:\\Users\\ctufaro_admin\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\obj\\",
+      "outputPath": "C:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.P2P\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -690,7 +706,11 @@
       },
       "frameworks": {
         "netcoreapp2.0": {
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.Utils\\Xerxes.Utils.csproj": {
+              "projectPath": "C:\\Users\\ctufaro_admin\\My Projects\\Xerxes\\Xerxes.Utils\\Xerxes.Utils.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

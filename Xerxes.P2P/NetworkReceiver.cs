@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
@@ -38,7 +39,7 @@ namespace Xerxes.P2P
             this.tcpListener.Server.LingerState = new LingerOption(true, 0);
             this.tcpListener.Server.NoDelay = true;
             this.serverCancel = new CancellationTokenSource();            
-            this.peers = new List<NetworkPeer>();
+            this.peers = new List<NetworkPeer>();                        
         }
 
         public void ReceivePeers(bool continuously)    
