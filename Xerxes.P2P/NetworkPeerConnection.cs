@@ -13,7 +13,7 @@ namespace Xerxes.P2P
     /// </summary>
     public class NetworkPeerConnection
     {
-        /// <summary>Underlaying TCP client.</summary>
+        /// <summary>Underlying TCP client.</summary>
         public TcpClient tcpClient;
 
         /// <summary>Stream to send and receive messages through established TCP connection.</summary>

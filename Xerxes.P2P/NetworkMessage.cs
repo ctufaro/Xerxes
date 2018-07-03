@@ -36,8 +36,9 @@ namespace Xerxes.P2P
 
     public enum NetworkStateType
     {
+        Seek = 0,
         /// <summary>Initial state of an outbound peer.</summary>
-        Created = 0,
+        Created,
         /// <summary>Network connection with the peer has been established.</summary>
         Connected,
         /// <summary>The node and the peer exchanged version information.</summary>

@@ -13,7 +13,7 @@ namespace Xerxes.P2P.Driver
         {
             if (Debugger.IsAttached)
             {
-                Start(new Options { ReceivePort = 1111, Gossip = "hi" });
+                Start(new Options { ReceivePort = 1111 });
             }
             else
             {
@@ -30,14 +30,8 @@ namespace Xerxes.P2P.Driver
             if(options.SeekPort!=null)
             {
                 IPEndPoint singleSeekPoint = new IPEndPoint(IPAddress.Loopback, options.SeekPort.Value);
-                NetworkSeeker networkSeeker = new NetworkSeeker(singleSeekPoint);
-                Task.Run(()=> networkSeeker.SeekPeers());
-            }
-
-            if(options.Gossip!=null)
-            {
                 NetworkSeeker networkSeeker = new NetworkSeeker();
-                Task.Run(()=> networkSeeker.StartInfectPeersAsync(options.Gossip, 5));
+                Task.Run(()=> networkSeeker.SeekPeers());
             }
 
             Console.ReadLine();

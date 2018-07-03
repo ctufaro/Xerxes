@@ -26,8 +26,5 @@ namespace Xerxes.P2P.Driver
 
         [Option('s', "seek", Required = false, Default=null, HelpText = "The port the node is seeking.")]
         public int? SeekPort { get; set; }
-
-        [Option('g', "gossip", Required = false, Default=null, HelpText = "The gossip message to broadcast.")]
-        public string Gossip { get; set; }            
     }
 }
