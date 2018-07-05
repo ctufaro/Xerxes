@@ -24,7 +24,13 @@ namespace Xerxes.P2P.Driver
         [Option('r', "receive", Required = true, HelpText = "The port the node is listening on.")]
         public int ReceivePort { get; set; }
 
-        [Option('s', "seek", Required = false, Default=null, HelpText = "The port the node is seeking.")]
+        [Option('s', "seek", Required = true, Default=null, HelpText = "Flag specifying if you want to discover other nodes (ex: true/false).")]
+        public bool? Seek { get; set; }        
+        
+        [Option('p', "seek port", Required = false, Default=null, HelpText = "The port the node is seeking.")]
         public int? SeekPort { get; set; }
+
+        [Option('t', "turf", Required = true, Default=null, HelpText = "The turf: 1 = intranet, 2 = testnet, 3 = mainnet.")]
+        public int? Turf { get; set; }        
     }
 }

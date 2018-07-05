@@ -1,3 +1,10 @@
+dotnet build
+
+dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
+--dotnet publish ./Xerxes.P2P.Driver/Xerxes.P2P.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
+
+dotnet run --project <csproj location>
+
 1. Start Network Receiver (ReceivePeers) - NetworkReceiver.cs
 	a. in while loop, continuously accept clients
 	b. once accepts, create a network peer connection
@@ -6,34 +13,6 @@
 	a. Seeking a hardcoded peer (X)
 	b. in while loop, create stream with peer, a network peer connection
 3. Optional (Gossip Infect)
-
-public async void SeekPeersAsync()
-        {
-            try
-            {
-                Console.WriteLine("Seeking peer on '{0}'.", this.SingleSeekPoint);
-                while (!this.serverCancel.IsCancellationRequested)
-                {
-                    using (var tcpClient = new TcpClient())
-                    {
-                        await tcpClient.ConnectAsync(this.SingleSeekPoint.Address, this.SingleSeekPoint.Port);
-                        peers.Add(new NetworkPeer(tcpClient));
-                        System.Console.WriteLine("Connected to peer, opening stream..");
-
-                        await Task.Run(() =>
-                        {
-                            NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
-                            while (true)
-                            {
-                                Thread.Sleep(1000);
-                                Task conversation = networkPeerConnection.ReceiveConversationAsync();
-                            }
-                        });
-                    }
-                }
-            }
-            catch { }
-        } 
 
 
 

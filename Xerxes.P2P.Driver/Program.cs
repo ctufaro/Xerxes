@@ -23,15 +23,18 @@ namespace Xerxes.P2P.Driver
 
         private static void Start(Options options)
         {
+            INetworkConfiguration networkConfiguration = new NetworkConfiguration();
+            networkConfiguration.Turf = (Turf)options.Turf.Value;
+            
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, options.ReceivePort);
             NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
             Task.Run(()=> networkReceiver.ReceivePeers(false));
 
-            if(options.SeekPort!=null)
+            if(options.Seek.Value)
             {
-                IPEndPoint singleSeekPoint = new IPEndPoint(IPAddress.Loopback, options.SeekPort.Value);
-                NetworkSeeker networkSeeker = new NetworkSeeker();
-                Task.Run(()=> networkSeeker.SeekPeers());
+                IPEndPoint singleSeekPoint = (options.SeekPort !=null) ? new IPEndPoint(IPAddress.Loopback, options.SeekPort.Value) : null;
+                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration);
+                Task.Run(()=> networkSeeker.SeekPeersAsync(singleSeekPoint));
             }
 
             Console.ReadLine();
@@ -49,8 +52,7 @@ namespace Xerxes.P2P.Driver
                 }, e =>
                 {
                     return e;
-                });
-                Console.WriteLine(helpText);
+                });                
             });
         }
     }

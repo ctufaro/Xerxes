@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
@@ -11,22 +10,35 @@ namespace Xerxes.P2P
     /// </summary>
     public class NetworkDiscovery
     {
-        bool UseIntranetOnly = false;
-        public NetworkDiscovery(bool useIntranetOnly)
+        private INetworkConfiguration NetworkConfiguration;
+        public NetworkDiscovery(INetworkConfiguration networkConfiguration)
         {
-            this.UseIntranetOnly = useIntranetOnly;
+            this.NetworkConfiguration = networkConfiguration;
         }
 
-        public void BroadcastToStreet()
+        /// <summary>
+        /// TODO: Refine this method, this method should: (1) initially route you to a street node
+        /// once connected to a streetnode, the streetnode should share it's peers with you,
+        /// you should then add those peers to your peers list. (2) You should then PERIODICALLY scan your peers lists and ask
+        /// them for their peers, update your list.null (3) PERIODICALLY, street nodes should swap with other streets.
+        /// After the swap, streets sould reshare with peers.
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns></returns>
+        public IPEndPoint ConnectToStreet()
         {            
-            if(UseIntranetOnly)
+            IPEndPoint ipEndPoint = null;
+            
+            if(this.NetworkConfiguration.Turf == Turf.Intranet)
             {
                 foreach(int port in DNSSeeds.Ports)
                 {
+                    ipEndPoint = new IPEndPoint(IPAddress.Loopback, port);
                     //send out NetworkStateType.Seek
+                    break;
                 }
             }
-            else
+            else if(this.NetworkConfiguration.Turf == Turf.TestNet)
             {
                 foreach(string name in DNSSeeds.Names)
                 {
@@ -37,6 +49,8 @@ namespace Xerxes.P2P
                     }
                 }
             }
+
+            return ipEndPoint;
         }
     }
 }

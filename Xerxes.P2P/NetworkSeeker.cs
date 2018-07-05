@@ -14,17 +14,49 @@ namespace Xerxes.P2P
     {
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
-        /// <summary>List of all outbound peers.</summary>
+        
+        private INetworkConfiguration networkConfiguration;
 
-        public NetworkSeeker()
+        public NetworkSeeker(INetworkConfiguration networkConfiguration)
         {
             this.serverCancel = new CancellationTokenSource();         
+            this.networkConfiguration = networkConfiguration;
         }
 
-        public void SeekPeers()
+        public async void SeekPeersAsync(IPEndPoint singleSeekPoint = null)
         {
+            try
+            {
+                if(singleSeekPoint==null)
+                {
+                    //lets discover some peers
+                    NetworkDiscovery networkDiscovery = new NetworkDiscovery(networkConfiguration);
+                    singleSeekPoint = networkDiscovery.ConnectToStreet();
+                }
 
-        }
+                Console.WriteLine("Seeking peer on '{0}'.", singleSeekPoint);              
+                while (!this.serverCancel.IsCancellationRequested)
+                {
+                    using (var tcpClient = new TcpClient())
+                    {
+                        await tcpClient.ConnectAsync(singleSeekPoint.Address, singleSeekPoint.Port);
+                        //peers.Add(new NetworkPeer(tcpClient));
+                        System.Console.WriteLine("Connected to peer, opening stream..");
+
+                        await Task.Run(() =>
+                        {
+                            NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
+                            while (true)
+                            {
+                                Thread.Sleep(1000);
+                                Task conversation = networkPeerConnection.ReceiveConversationAsync();
+                            }
+                        });
+                    }
+                }
+            }
+            catch { }
+        } 
 
                
 
