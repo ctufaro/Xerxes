@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Net;
-using CommandLine;
 using System.Threading.Tasks;
-using CommandLine.Text;
 using System.Diagnostics;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Data.Common;
+using CommandLine;
+using CommandLine.Text;
+using Xerxes.Utils;
 
 namespace Xerxes.P2P.Driver
 {
@@ -11,6 +15,8 @@ namespace Xerxes.P2P.Driver
     {
         static void Main(string[] args)
         {
+            UtilitiesDatabase.Lazy(Utilities.GetApplicationRoot("Xerxes.db"));
+
             if (Debugger.IsAttached)
             {
                 Start(new Options { ReceivePort = 1111 });
@@ -19,7 +25,7 @@ namespace Xerxes.P2P.Driver
             {
                 TryParseArgs(args);
             }
-        }
+        } 
 
         private static void Start(Options options)
         {
