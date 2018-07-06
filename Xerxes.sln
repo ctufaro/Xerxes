@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.P2P", "Xerxes.P2P\Xerxes.P2P.csproj", "{6D74DB8F-9092-4A5D-9408-D7A457816BAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.P2P.Driver", "Xerxes.P2P.Driver\Xerxes.P2P.Driver.csproj", "{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.Driver", "Xerxes.Driver\Xerxes.Driver.csproj", "{38C63F72-6360-4D7D-AFE9-7E7DD79A635E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xerxes.Utils", "Xerxes.Utils\Xerxes.Utils.csproj", "{53D02F53-55A8-42F5-A350-76E0F5677B78}"
 EndProject

@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-namespace Xerxes.P2P.Driver
+namespace Xerxes.Driver
 {
     public class Options
     {

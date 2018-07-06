@@ -1,5 +1,10 @@
 using System;
 using System.Net;
+using System.Collections.Generic;
+using Xerxes.Utils;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace Xerxes.P2P
 {
@@ -10,47 +15,38 @@ namespace Xerxes.P2P
     /// </summary>
     public class NetworkDiscovery
     {
-        private INetworkConfiguration NetworkConfiguration;
-        public NetworkDiscovery(INetworkConfiguration networkConfiguration)
+        private readonly CancellationTokenSource serverCancel;
+        private INetworkConfiguration networkConfiguration;
+        private ConcurrentBag<IPEndPoint> peers;
+        public NetworkDiscovery(INetworkConfiguration networkConfiguration, ConcurrentBag<IPEndPoint> peers)
         {
-            this.NetworkConfiguration = networkConfiguration;
+            this.networkConfiguration = networkConfiguration;
+            this.serverCancel = new CancellationTokenSource();
+            this.peers = peers;
         }
 
-        /// <summary>
-        /// TODO: Refine this method, this method should: (1) initially route you to a street node
-        /// once connected to a streetnode, the streetnode should share it's peers with you,
-        /// you should then add those peers to your peers list. (2) You should then PERIODICALLY scan your peers lists and ask
-        /// them for their peers, update your list.null (3) PERIODICALLY, street nodes should swap with other streets.
-        /// After the swap, streets sould reshare with peers.
-        /// </summary>
-        /// <param name=""></param>
-        /// <returns></returns>
-        public IPEndPoint ConnectToStreet()
-        {            
-            IPEndPoint ipEndPoint = null;
-            
-            if(this.NetworkConfiguration.Turf == Turf.Intranet)
-            {
-                foreach(int port in DNSSeeds.Ports)
+        public async Task<List<IPEndPoint>> DiscoverPeersAsync(CancellationTokenSource seekReset)
+        {
+            while (!seekReset.IsCancellationRequested)  
+            {                   
+                await Task.Run(() =>
                 {
-                    ipEndPoint = new IPEndPoint(IPAddress.Loopback, port);
-                    //send out NetworkStateType.Seek
-                    break;
-                }
+                    Console.WriteLine("In DiscoveryPeers Method");
+                    Thread.Sleep(1000);
+                    this.peers.Add(new IPEndPoint(0,0));
+                    Console.WriteLine("In DiscoveryPeers Method, calling cancel");
+                    seekReset.Cancel();
+                });                    
             }
-            else if(this.NetworkConfiguration.Turf == Turf.TestNet)
-            {
-                foreach(string name in DNSSeeds.Names)
-                {
-                    IPHostEntry host = Dns.GetHostEntry(name);
-                    foreach (IPAddress ip in host.AddressList)
-                    {
-                        //send out NetworkStateType.Seek
-                    }
-                }
-            }
-
-            return ipEndPoint;
+            return null;    
         }
+
+        private List<IPEndPoint> GetSavedConnections()
+        {
+            //TODO: Implement this
+            List<IPEndPoint> ipEndPoints = new List<IPEndPoint>();
+            return ipEndPoints;
+        }
+
     }
 }

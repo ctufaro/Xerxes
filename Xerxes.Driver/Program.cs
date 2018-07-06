@@ -8,15 +8,14 @@ using System.Data.Common;
 using CommandLine;
 using CommandLine.Text;
 using Xerxes.Utils;
+using Xerxes.P2P;
 
-namespace Xerxes.P2P.Driver
+namespace Xerxes.Driver
 {
     class Program
     {
         static void Main(string[] args)
         {
-            UtilitiesDatabase.Lazy(Utilities.GetApplicationRoot("Xerxes.db"));
-
             if (Debugger.IsAttached)
             {
                 Start(new Options { ReceivePort = 1111 });
@@ -29,18 +28,19 @@ namespace Xerxes.P2P.Driver
 
         private static void Start(Options options)
         {
+            string config = File.ReadAllText(UtilitiesGeneral.GetApplicationRoot("Xerxes.conf"));
+            UtilitiesConfiguration utilConfiguration = new UtilitiesConfiguration(config);
             INetworkConfiguration networkConfiguration = new NetworkConfiguration();
             networkConfiguration.Turf = (Turf)options.Turf.Value;
             
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, options.ReceivePort);
             NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
-            Task.Run(()=> networkReceiver.ReceivePeers(false));
+            Task.Run(()=> networkReceiver.ReceivePeers());
 
             if(options.Seek.Value)
             {
-                IPEndPoint singleSeekPoint = (options.SeekPort !=null) ? new IPEndPoint(IPAddress.Loopback, options.SeekPort.Value) : null;
                 NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration);
-                Task.Run(()=> networkSeeker.SeekPeersAsync(singleSeekPoint));
+                Task.Run(()=> networkSeeker.SeekPeersAsync());
             }
 
             Console.ReadLine();

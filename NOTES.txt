@@ -5,44 +5,71 @@ dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
 
 dotnet run --project <csproj location>
 
-1. Start Network Receiver (ReceivePeers) - NetworkReceiver.cs
-	a. in while loop, continuously accept clients
-	b. once accepts, create a network peer connection
-	c. start conversation
-2. Start Network Seeker (SeekPeers) - NetworkSeeker.cs
-	a. Seeking a hardcoded peer (X)
-	b. in while loop, create stream with peer, a network peer connection
-3. Optional (Gossip Infect)
-
-
+1. used saved connections, if none proceed to 2
+2. connect to a street node or port (if testing intranet)
+3. streets flood each other
+4. streets share list with direct peers
+5. peers connect to random eight
+6. self broadcast and flood
+7. refresh
+8. handshake should be (protocol, sofware, ipaddress, blockheight)
 
 private async Task SendGossipAsync(string message, int port)
-        {
-            try
-            {   
-                
-                if(!visitedPorts.ContainsKey(port))
-                {                
-                    using (var tcpClient = new TcpClient())
-                    {
-                        await tcpClient.ConnectAsync(IPAddress.Loopback, port);
-                        await Task.Run(async () =>
-                        {
-                            NetworkStream st = tcpClient.GetStream();
-                            visitedPorts.TryAdd(port,st);
-                            byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
-                            await st.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
-                        });
-                    }                
-                }
-                else
+{
+    try
+    {   
+        
+        if(!visitedPorts.ContainsKey(port))
+        {                
+            using (var tcpClient = new TcpClient())
+            {
+                await tcpClient.ConnectAsync(IPAddress.Loopback, port);
+                await Task.Run(async () =>
                 {
-                    await Task.Run(async () =>
-                    {                        
-                        byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
-                        await visitedPorts[port].WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
-                    });
-                }
-            }
-            catch { }
+                    NetworkStream st = tcpClient.GetStream();
+                    visitedPorts.TryAdd(port,st);
+                    byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
+                    await st.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
+                });
+            }                
         }
+        else
+        {
+            await Task.Run(async () =>
+            {                        
+                byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
+                await visitedPorts[port].WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
+            });
+        }
+    }
+    catch { }
+}
+
+public async void SeekPeersAsync()
+{
+    try
+    {
+        Console.WriteLine("Seeking peers");
+        NetworkDiscovery networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers);
+        while (!this.serverCancel.IsCancellationRequested)
+        {
+            using (var tcpClient = new TcpClient())
+            {
+                //await tcpClient.ConnectAsync(singleSeekPoint.Address, singleSeekPoint.Port);
+                //peers.Add(new NetworkPeer(tcpClient));
+                System.Console.WriteLine("Connected to peer, opening stream..");
+
+                await Task.Run(() =>
+                {
+                    NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
+                    while (true)
+                    {
+                        Thread.Sleep(1000);
+                        Task conversation = networkPeerConnection.ReceiveConversationAsync();
+                    }
+                });
+            }
+        }
+    }
+    catch { }
+} 

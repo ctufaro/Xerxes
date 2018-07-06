@@ -7,7 +7,7 @@ namespace Xerxes.Utils
 {
     public class UtilitiesDatabase
     {
-       public static void Lazy(string pathToDatabase)
+       public static void SaveGetFromDB(string pathToDatabase, string externalIP)
         {
             using (var connection = new SqliteConnection("" +
                 new SqliteConnectionStringBuilder
@@ -21,13 +21,14 @@ namespace Xerxes.Utils
                 {
                     var insertCommand = connection.CreateCommand();
                     insertCommand.Transaction = transaction;
-                    insertCommand.CommandText = "INSERT INTO message ( text ) VALUES ( $text )";
-                    insertCommand.Parameters.AddWithValue("$text", "Hello, World!");
+                    insertCommand.CommandText = "INSERT INTO PEERS ( IPAddress, DateAdded ) VALUES ( $ipAddress, $dateAdded )";
+                    insertCommand.Parameters.AddWithValue("$ipAddress", externalIP);
+                    insertCommand.Parameters.AddWithValue("$dateAdded", DateTime.Now.ToString());
                     insertCommand.ExecuteNonQuery();
 
                     var selectCommand = connection.CreateCommand();
                     selectCommand.Transaction = transaction;
-                    selectCommand.CommandText = "SELECT text FROM message";
+                    selectCommand.CommandText = "SELECT IPAddress FROM PEERS";
                     using (var reader = selectCommand.ExecuteReader())
                     {
                         while (reader.Read())

@@ -24,7 +24,7 @@ namespace Xerxes.Utils
     /// settings loaded from the configuration file.
     /// </para>
     /// </summary>
-    public class UtilitiesTextFiles
+    public class UtilitiesConfiguration
     {
         /// <summary>Application command line arguments as a mapping of argument name to list of its values.</summary>
         private readonly Dictionary<string, List<string>> args;
@@ -34,7 +34,7 @@ namespace Xerxes.Utils
         /// </summary>
         /// <param name="args">Application command line arguments.</param>
         /// <remarks>Command line arguments are expected to come in form of Name=Value, where Name can be prefixed with '-'.</remarks>
-        public UtilitiesTextFiles(string[] args)
+        public UtilitiesConfiguration(string[] args)
         {
             this.args = new Dictionary<string, List<string>>();
             foreach (string arg in args)
@@ -57,7 +57,7 @@ namespace Xerxes.Utils
         /// Initializes the instance of the object using the configuration file contents.
         /// </summary>
         /// <param name="data">Contents of the configuration file to parse and extract arguments from.</param>
-        public UtilitiesTextFiles(string data)
+        public UtilitiesConfiguration(string data)
         {
             this.args = new Dictionary<string, List<string>>();
             int lineNumber = 0;
@@ -107,7 +107,7 @@ namespace Xerxes.Utils
         /// Merges current instance of the configuration to the target instance.
         /// </summary>
         /// <param name="destination">Target instance to merge current instance into.</param>
-        public void MergeInto(UtilitiesTextFiles destination)
+        public void MergeInto(UtilitiesConfiguration destination)
         {
             foreach (KeyValuePair<string, List<string>> kv in this.args)
             {

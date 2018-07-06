@@ -39,7 +39,7 @@ namespace Xerxes.P2P
             this.peers = new List<NetworkPeer>();                        
         }
 
-        public void ReceivePeers(bool continuously)    
+        public void ReceivePeers()    
         {
             try
             {
