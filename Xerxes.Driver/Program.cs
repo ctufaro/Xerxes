@@ -32,6 +32,7 @@ namespace Xerxes.Driver
             UtilitiesConfiguration utilConfiguration = new UtilitiesConfiguration(config);
             INetworkConfiguration networkConfiguration = new NetworkConfiguration();
             networkConfiguration.Turf = (Turf)options.Turf.Value;
+            networkConfiguration.Street = options.Street.Value;
             
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, options.ReceivePort);
             NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
@@ -39,7 +40,7 @@ namespace Xerxes.Driver
 
             if(options.Seek.Value)
             {
-                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration);
+                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration);
                 Task.Run(()=> networkSeeker.SeekPeersAsync());
             }
 

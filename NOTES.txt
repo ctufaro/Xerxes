@@ -5,14 +5,15 @@ dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
 
 dotnet run --project <csproj location>
 
-1. used saved connections, if none proceed to 2
-2. connect to a street node or port (if testing intranet)
-3. streets flood each other
+1. used saved connections, if none proceed to 2 [X]
+2. get connections from configuration file [X]
+3. streets flood each other with their peers
 4. streets share list with direct peers
-5. peers connect to random eight
-6. self broadcast and flood
-7. refresh
-8. handshake should be (protocol, sofware, ipaddress, blockheight)
+5. connect to a street node or port (if testing intranet) 
+6. peers connect to random eight
+7. self broadcast and flood
+8. refresh
+9. handshake should be (protocol, software, ipaddress, blockheight)
 
 private async Task SendGossipAsync(string message, int port)
 {

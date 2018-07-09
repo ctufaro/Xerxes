@@ -7,8 +7,8 @@ namespace Xerxes.P2P
 {
     public interface INetworkPeer
     {
-        IPEndPoint ipEnd{ get;set;}
-        string id {get;set;}
-        TcpClient tcpClient {get;set;}
+        IPEndPoint IPEnd{ get;set;}
+        string Id {get;set;}
+        TcpClient TCPClient {get;set;}
     } 
 }

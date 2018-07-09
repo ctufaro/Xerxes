@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
@@ -19,22 +19,26 @@ namespace Xerxes.P2P
         
         private INetworkConfiguration networkConfiguration;
 
-        private ConcurrentBag<IPEndPoint> peers;
+        private UtilitiesConfiguration utilConf;
 
-        public NetworkSeeker(INetworkConfiguration networkConfiguration)
+        private NetworkPeers peers;        
+
+        public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
         {
             this.serverCancel = new CancellationTokenSource();
             this.seekReset = new CancellationTokenSource();
             this.networkConfiguration = networkConfiguration;
-            this.peers = new ConcurrentBag<IPEndPoint>();
+            this.utilConf = utilConf;
+            this.peers = new NetworkPeers();
         }
 
         public async void SeekPeersAsync()
         {
             try
-            {
-                Console.WriteLine("Seeking peers");
-                NetworkDiscovery networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers);
+            {                
+                NetworkDiscovery networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers, this.utilConf);
+                int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
+                Console.WriteLine("Seeking peers in {0} seconds", delay/1000);
                 
                 while (!this.serverCancel.IsCancellationRequested)
                 {                   
@@ -42,13 +46,19 @@ namespace Xerxes.P2P
                     {                        
                         while (!this.seekReset.IsCancellationRequested)
                         {
-                            Thread.Sleep(1000);
-                            Console.WriteLine("About to Discover Peers");
-                            await networkDiscovery.DiscoverPeersAsync(this.seekReset);                            
+                            //Peer discovery begins
+                            await networkDiscovery.DiscoverPeersAsync(this.seekReset);
+                            Console.WriteLine(this.peers);
                         }
-                        Console.WriteLine("Discovery Stopped, looping to top again, peer count:{0}", this.peers.Count);
+                        
+                        //Peer discovery stopped
                         this.seekReset = new CancellationTokenSource();
-                    });                    
+                    });
+
+                    //Peers populated, let's attempt to connect
+
+                    //will resume discovery in 
+                    await Task.Delay(delay, this.serverCancel.Token);
                 }
             }
             catch { }

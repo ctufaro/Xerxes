@@ -36,6 +36,7 @@ namespace Xerxes.Utils
         public static List<IPAddress> GetStreetNodes(string[] dnsnames)
         {
                 List<IPAddress> retAddresses = new List<IPAddress>();
+                if(dnsnames.Length == 0) return retAddresses;
                 foreach(string name in dnsnames)
                 {
                     IPHostEntry host = Dns.GetHostEntry(name);
@@ -50,6 +51,7 @@ namespace Xerxes.Utils
         public static List<IPEndPoint> GetStreetPorts(string[] ports)
         {
             List<IPEndPoint> retPorts = new List<IPEndPoint>();
+            if(ports.Length == 0) return retPorts;
             foreach(string port in ports)
             {
                 retPorts.Add(new IPEndPoint(IPAddress.Loopback, Int32.Parse(port)));
