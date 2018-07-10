@@ -17,7 +17,7 @@ namespace Xerxes.Utils
             return appRoot;
         }
 
-        public static IPAddress GetExternalIPAddress()
+        public static IPAddress GetMyIPAddress()
         {
             //TODO: make this better, lol
             try

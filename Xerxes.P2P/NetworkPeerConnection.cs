@@ -25,7 +25,7 @@ namespace Xerxes.P2P
         {
             this.tcpClient = client;
             this.cancellationSource = new CancellationTokenSource();
-            this.stream = this.tcpClient.Connected ? this.tcpClient.GetStream() : null;
+            this.stream = this.tcpClient.GetStream();
         }
         
         public async Task<string> ReceiveMessageAsync()
@@ -43,7 +43,23 @@ namespace Xerxes.P2P
                 System.Console.WriteLine("Connection Aborted");
                 return "";
             }
-        } 
+        }
+
+        public async Task<NetworkMessage> GetMessageAsync()
+        {
+            try
+            {
+                var buffer = new byte[4096];
+                var byteCount = await this.stream.ReadAsync(buffer, 0, buffer.Length);
+                var json = Encoding.UTF8.GetString(buffer, 0, byteCount);
+                return NetworkMessage.JSONToNetworkMessage(json);
+            }
+            catch(Exception e)
+            {               
+                Console.WriteLine("Connection Aborted ({0})",e.ToString());
+                return null;                
+            }
+        }  
 
         public async Task SendMessageAsync()
         {
@@ -54,10 +70,10 @@ namespace Xerxes.P2P
                 await stream.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
                 System.Console.WriteLine("Sent message {0}", response);
             }
-            catch
+            catch(Exception e)
             {
-                System.Console.WriteLine("Connection Aborted");
-            }            
+                Console.WriteLine("Connection Aborted ({0})",e.ToString());
+            }           
         }
 
         public async Task StartConversationAsync()

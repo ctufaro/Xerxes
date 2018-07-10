@@ -32,10 +32,10 @@ namespace Xerxes.Driver
             UtilitiesConfiguration utilConfiguration = new UtilitiesConfiguration(config);
             INetworkConfiguration networkConfiguration = new NetworkConfiguration();
             networkConfiguration.Turf = (Turf)options.Turf.Value;
-            networkConfiguration.Street = options.Street.Value;
+            networkConfiguration.ReceivePort = options.ReceivePort;
             
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Loopback, options.ReceivePort);
-            NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint);
+            NetworkReceiver networkReceiver = new NetworkReceiver(iPEndPoint, networkConfiguration, utilConfiguration);
             Task.Run(()=> networkReceiver.ReceivePeers());
 
             if(options.Seek.Value)

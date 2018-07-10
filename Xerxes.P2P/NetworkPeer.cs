@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -13,27 +14,9 @@ namespace Xerxes.P2P
         public string Id {get;set;}
         public TcpClient TCPClient { get;set; }
 
-        public NetworkPeer(IPEndPoint ipEnd, string id, TcpClient tcpClient)
-        {
-            this.IPEnd = ipEnd;
-            this.Id = id;
-            this.TCPClient = tcpClient;
-        }
-
-        public NetworkPeer(IPEndPoint ipEnd, string id)
-        {
-            this.IPEnd = ipEnd;
-            this.Id = id;
-        }
-
         public NetworkPeer(IPEndPoint ipEnd)
         {
             this.IPEnd = ipEnd;
-        }        
-
-        public NetworkPeer(TcpClient tcpClient)
-        {           
-            this.TCPClient = tcpClient;
         }
 
         public async void SendMessage(string response, NetworkStream receiver)
@@ -46,15 +29,46 @@ namespace Xerxes.P2P
     public class NetworkPeers
     {
         public ConcurrentDictionary<string, NetworkPeer> peers;
+        public int maxinbound{get;set;}
+
+        public int Count
+        {
+            get
+            {
+                return this.peers.Count;
+            }
+        }
         public NetworkPeers()
         {
             this.peers = new ConcurrentDictionary<string, NetworkPeer>();
         }
 
+        public NetworkPeers(int maxinbound)
+        {
+            this.peers = new ConcurrentDictionary<string, NetworkPeer>();
+            this.maxinbound = maxinbound;
+        }        
+
         public void AddPeer(NetworkPeer toBeAdded)
         {
             this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
         }
+
+        public NetworkPeerMessage AddInboundPeer(NetworkPeer toBeAdded)
+        {
+            if(this.peers.Count < maxinbound)
+            {
+                bool result =  this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
+                if(result)
+                    return NetworkPeerMessage.Success;
+                else
+                    return NetworkPeerMessage.AlreadyExists;
+            }
+            else
+            {
+                return NetworkPeerMessage.MaximumConnectionsReached;
+            }
+        }              
 
         public override string ToString()
         {
@@ -72,7 +86,14 @@ namespace Xerxes.P2P
                 sb.AppendLine("No peers found.");
             }
             return sb.ToString();            
-        }           
-        
+        }        
+
+    }
+
+    public enum NetworkPeerMessage
+    {
+        Success=0,
+        AlreadyExists,
+        MaximumConnectionsReached
     }
 }

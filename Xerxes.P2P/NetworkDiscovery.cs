@@ -5,6 +5,8 @@ using Xerxes.Utils;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Net.Sockets;
+using System.Text;
 
 namespace Xerxes.P2P
 {
@@ -31,10 +33,11 @@ namespace Xerxes.P2P
         {
             while (!seekReset.IsCancellationRequested)  
             {                   
-                await Task.Run(() =>
+                await Task.Run(async () =>
                 {                    
                     GetConnectionsFromDB();
-                    GetConnectionsFromStreet();                    
+                    GetConnectionsFromStreet();
+                    await BroadcastSeekAsync();
                     seekReset.Cancel();
                 });                    
             }
@@ -67,6 +70,52 @@ namespace Xerxes.P2P
                 Merge(UtilitiesNetwork.GetStreetNodes(dnsnames), port);
             }            
         }
+
+        private async Task BroadcastSeekAsync()
+        {            
+            foreach(NetworkPeer peer in peers.peers.Values)
+            {             
+                Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
+                using (var tcpClient = new TcpClient())
+                {
+                    await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
+                    System.Console.WriteLine("Connected to peer, sending seek message..");
+                    NetworkMessage nm = new NetworkMessage();
+                    IPEndPoint myEndPoint = GetMyEndPoint();
+                    nm.MessageSenderIP = myEndPoint.Address.ToString();
+                    nm.MessageSenderPort = myEndPoint.Port;
+                    nm.MessageStateType = NetworkStateType.Seek;
+                    string json = NetworkMessage.NetworkMessageToJSON(nm);
+                    byte[] bytes = Encoding.UTF8.GetBytes(json);
+                    using (var networkStream = tcpClient.GetStream())
+                    {
+                        Console.WriteLine("Sending to Peer {0}", json);
+                        await networkStream.WriteAsync(bytes, 0, bytes.Length);
+                    }                  
+
+                }                
+            }
+        }
+
+        private IPEndPoint GetMyEndPoint()
+        {
+            if(networkConfiguration.Turf == Turf.Intranet)
+            {
+                int port = this.networkConfiguration.ReceivePort;
+                return new IPEndPoint(IPAddress.Loopback, port); 
+            }
+            else if(networkConfiguration.Turf == Turf.TestNet)
+            {
+                int port = utilConf.GetOrDefault<int>("testnet",0);
+                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port); 
+            }
+            else 
+            {
+                int port = utilConf.GetOrDefault<int>("mainnet",0);
+                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port);
+            } 
+        }
+
         private void Merge(List<IPEndPoint> toBeMerged)
         {
             if(toBeMerged.Count > 0)

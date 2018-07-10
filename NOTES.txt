@@ -1,15 +1,18 @@
+https://en.bitcoin.it/wiki/Satoshi_Client_Node_Discovery
+
 dotnet build
 
 dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
---dotnet publish ./Xerxes.P2P.Driver/Xerxes.P2P.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
+--(copy conf to temp dir)
+--dotnet publish ./Xerxes.Driver/Xerxes.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
 
 dotnet run --project <csproj location>
 
 1. used saved connections, if none proceed to 2 [X]
 2. get connections from configuration file [X]
-3. streets flood each other with their peers
+3. nodes broadcast themselves to the street and saved connections
 4. streets share list with direct peers
-5. connect to a street node or port (if testing intranet) 
+5. connect to a saved connection, a street node, or port (if testing intranet) 
 6. peers connect to random eight
 7. self broadcast and flood
 8. refresh

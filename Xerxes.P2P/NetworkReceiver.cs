@@ -5,18 +5,20 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
-    //dotnet build
-    //dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
-    //dotnet run --project <csproj location>
     public class NetworkReceiver
     {
         private static Random r = new Random();
         
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
-        private readonly CancellationTokenSource serverCancel;        
+        private readonly CancellationTokenSource serverCancel;
+
+        private INetworkConfiguration networkConfiguration;
+
+        private UtilitiesConfiguration utilConf;                
 
         /// <summary>TCP server listener accepting inbound connections.</summary>
         private readonly TcpListener tcpListener;      
@@ -25,18 +27,20 @@ namespace Xerxes.P2P
         public IPEndPoint LocalEndpoint { get; private set; }
         
         /// <summary>List of all inbound peers.</summary>
-        private List<NetworkPeer> peers;
+        private NetworkPeers Peers;
         /// <summary>Task accepting new clients in a loop.</summary>
         private Task acceptTask;
 
-        public NetworkReceiver(IPEndPoint localEndPoint)
+        public NetworkReceiver(IPEndPoint localEndPoint, INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
         {
             this.LocalEndpoint = localEndPoint;
             this.tcpListener = new TcpListener(this.LocalEndpoint);
             this.tcpListener.Server.LingerState = new LingerOption(true, 0);
             this.tcpListener.Server.NoDelay = true;
-            this.serverCancel = new CancellationTokenSource();            
-            this.peers = new List<NetworkPeer>();                        
+            this.serverCancel = new CancellationTokenSource();
+            this.networkConfiguration = networkConfiguration;
+            this.utilConf = utilConf;            
+            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117));                     
         }
 
         public void ReceivePeers()    
@@ -74,10 +78,13 @@ namespace Xerxes.P2P
                             throw exception;
                         }
                     }).ConfigureAwait(false);
-                    Console.WriteLine("Connection accepted from client '{0}'.", tcpClient.Client.RemoteEndPoint);
-                    this.peers.Add(new NetworkPeer(tcpClient));
                     NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
-                    Task conversation = networkPeerConnection.StartConversationAsync();
+                    NetworkMessage message = await networkPeerConnection.GetMessageAsync();
+                    IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
+                    NetworkPeer networkPeers = new NetworkPeer(ipEndPoint);
+                    var result = this.Peers.AddInboundPeer(networkPeers);
+                    Console.WriteLine("Status of Adding Peer: {0}", result.ToString());
+                    Console.WriteLine("Inbound Peer Count: {0}", this.Peers.Count);
                 }
             }
             catch { }

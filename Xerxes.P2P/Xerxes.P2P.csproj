@@ -2,6 +2,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Xerxes.Utils\Xerxes.Utils.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>

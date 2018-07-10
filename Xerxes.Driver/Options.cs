@@ -32,8 +32,5 @@ namespace Xerxes.Driver
 
         [Option('t', "turf", Required = true, Default=null, HelpText = "The turf: 1 = intranet, 2 = testnet, 3 = mainnet.")]
         public int? Turf { get; set; }
-
-        [Option('n', "street", Required = true, Default=null, HelpText = "Flag specifying if you are a street node (ex: true/false).")]
-        public bool? Street { get; set; }                
     }
 }

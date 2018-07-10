@@ -1,16 +1,19 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Xerxes.P2P
 {
     public class NetworkMessage
     {
+        
+        public NetworkStateType MessageStateType{get;set;}
+
+        public string MessageSenderIP{get;set;}
+
+        public int MessageSenderPort{get;set;}
         public static byte[] NetworkMessageToByteArray(NetworkMessage obj)
         {
             BinaryFormatter bf = new BinaryFormatter();
@@ -19,7 +22,18 @@ namespace Xerxes.P2P
                 bf.Serialize(ms, obj);
                 return ms.ToArray();
             }
+            
         }
+
+        public static string NetworkMessageToJSON(NetworkMessage obj)
+        {
+            return JsonConvert.SerializeObject(obj);
+        }
+
+        public static NetworkMessage JSONToNetworkMessage(string json)
+        {
+            return JsonConvert.DeserializeObject<NetworkMessage>(json);
+        }        
 
         public static NetworkMessage ByteArrayToNetworkMessage(byte[] arrBytes)
         {
@@ -40,8 +54,6 @@ namespace Xerxes.P2P
         Seek = 0,
         /// <summary>Initial state of an outbound peer.</summary>
         Created,
-        /// <summary>Street nodes connected to other street nodes.</summary>
-        Street2Street,
         /// <summary>Network connection with the peer has been established.</summary>
         Connected,
         /// <summary>The node and the peer exchanged version information.</summary>
@@ -54,6 +66,7 @@ namespace Xerxes.P2P
         Failed
     }
 
+    [Serializable]
     public enum NetworkMessageType
     {
         /// <summary>Simple Acknowledgement Message</summary>
