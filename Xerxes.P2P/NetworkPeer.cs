@@ -51,7 +51,12 @@ namespace Xerxes.P2P
 
         public void AddPeer(NetworkPeer toBeAdded)
         {
-            this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
+            bool unique = this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
+        }
+
+        public void Clear()
+        {
+            this.peers.Clear();
         }
 
         public NetworkPeerMessage AddInboundPeer(NetworkPeer toBeAdded)
@@ -78,7 +83,7 @@ namespace Xerxes.P2P
                 foreach(var p in peers)
                 {   
                     string output = (p.Value.IPEnd!=null) ? p.Value.IPEnd.ToString() : "";
-                    sb.AppendLine(output);
+                    sb.Append(output+ " ");
                 }
             }
             else

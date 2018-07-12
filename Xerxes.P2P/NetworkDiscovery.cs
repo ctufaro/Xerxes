@@ -7,11 +7,12 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
+using System.Linq;
 
 namespace Xerxes.P2P
 {
     /// <summary>    
-    /// When a user first starts receiving, they need to broadcast their existence to street nodes
+    /// When a user first starts receiving, they need to connect to seed nodes
     /// When a user is seeking, they need to be notified when a new peer has joined the network and update
     /// their peer list.
     /// </summary>
@@ -29,46 +30,54 @@ namespace Xerxes.P2P
             this.peers = peers;
         }
 
-        public async Task<List<IPEndPoint>> DiscoverPeersAsync(CancellationTokenSource seekReset)
+        public async Task DiscoverPeersAsync(CancellationTokenSource seekReset)
         {
             while (!seekReset.IsCancellationRequested)  
             {                   
                 await Task.Run(async () =>
                 {                    
-                    GetConnectionsFromDB();
-                    GetConnectionsFromStreet();
-                    await BroadcastSeekAsync();
+                    await GetConnectionsFromDBAsync();
+                    await GetConnectionsFromSeedsAsync();
+                    //await BroadcastSeekAsync();
                     seekReset.Cancel();
                 });                    
-            }
-            return null;    
+            } 
         }
 
-        private void GetConnectionsFromDB()
-        {
-            string pathToDatabase = UtilitiesGeneral.GetApplicationRoot("Xerxes.db");
-            Merge(UtilitiesDatabase.GetSavedConnectionsFromDB(pathToDatabase));            
+        private async Task GetConnectionsFromDBAsync()
+        {   
+            await Task.Run(()=>
+            {
+                string pathToDatabase = UtilitiesGeneral.GetApplicationRoot("Xerxes.db");
+                Merge(UtilitiesDatabase.GetSavedConnectionsFromDB(pathToDatabase));            
+            });
         }
 
-        private void GetConnectionsFromStreet()
+        private async Task GetConnectionsFromSeedsAsync()
         {
-            if(networkConfiguration.Turf == Turf.Intranet)
+            await Task.Run(()=>
             {
-                string[] ports = utilConf.GetOrDefault<string>("intraports","").Split(',', StringSplitOptions.RemoveEmptyEntries);
-                Merge(UtilitiesNetwork.GetStreetPorts(ports));
-            }
-            else if(networkConfiguration.Turf == Turf.TestNet)
-            {
-                int port = utilConf.GetOrDefault<int>("testnet",0);
-                string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
-                Merge(UtilitiesNetwork.GetStreetNodes(dnsnames), port);
-            }
-            else if(networkConfiguration.Turf == Turf.MainNet)
-            {
-                int port = utilConf.GetOrDefault<int>("mainnet",0);
-                string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
-                Merge(UtilitiesNetwork.GetStreetNodes(dnsnames), port);
-            }            
+                if(networkConfiguration.Turf == Turf.Intranet)
+                {
+                    string[] ports = utilConf.GetOrDefault<string>("intraports","").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    IEnumerable<IPEndPoint> ipList = UtilitiesNetwork.GetRandomSeedPorts(ports, utilConf.GetOrDefault<int>("seedsreturned",3));
+                    Merge(ipList);
+                }
+                else if(networkConfiguration.Turf == Turf.TestNet)
+                {
+                    int port = utilConf.GetOrDefault<int>("testnet",0);
+                    string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    IEnumerable<IPAddress> ipList = UtilitiesNetwork.GetRandomSeedNodes(dnsnames, utilConf.GetOrDefault<int>("seedsreturned",3));
+                    Merge(ipList, port);
+                }
+                else if(networkConfiguration.Turf == Turf.MainNet)
+                {
+                    int port = utilConf.GetOrDefault<int>("mainnet",0);
+                    string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    IEnumerable<IPAddress> ipList = UtilitiesNetwork.GetRandomSeedNodes(dnsnames, utilConf.GetOrDefault<int>("seedsreturned",3));
+                    Merge(ipList, port);
+                }
+            });            
         }
 
         private async Task BroadcastSeekAsync()
@@ -116,8 +125,9 @@ namespace Xerxes.P2P
             } 
         }
 
-        private void Merge(List<IPEndPoint> toBeMerged)
+        private void Merge(IEnumerable<IPEndPoint> ipList)
         {
+            List<IPEndPoint> toBeMerged = ipList.ToList();
             if(toBeMerged.Count > 0)
             {
                 foreach(IPEndPoint iEP in toBeMerged)
@@ -126,8 +136,9 @@ namespace Xerxes.P2P
                 }
             }
         }
-        private void Merge(List<IPAddress> toBeMerged, int port)
+        private void Merge(IEnumerable<IPAddress> ipList, int port)
         {
+            List<IPAddress> toBeMerged = ipList.ToList();
             if(toBeMerged.Count > 0)
             {
                 foreach(IPAddress iAD in toBeMerged)

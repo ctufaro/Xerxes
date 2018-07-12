@@ -49,6 +49,7 @@ namespace Xerxes.P2P
                             //Peer discovery begins
                             await networkDiscovery.DiscoverPeersAsync(this.seekReset);
                             Console.WriteLine(this.peers);
+                            this.peers.Clear();
                         }
                         
                         //Peer discovery stopped

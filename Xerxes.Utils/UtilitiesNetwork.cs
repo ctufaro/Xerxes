@@ -33,10 +33,9 @@ namespace Xerxes.Utils
             return IPAddress.Parse("0.0.0.0");
         }
 
-        public static List<IPAddress> GetStreetNodes(string[] dnsnames)
-        {
+        public static IEnumerable<IPAddress> GetRandomSeedNodes(string[] dnsnames, int throttle)
+        {                
                 List<IPAddress> retAddresses = new List<IPAddress>();
-                if(dnsnames.Length == 0) return retAddresses;
                 foreach(string name in dnsnames)
                 {
                     IPHostEntry host = Dns.GetHostEntry(name);
@@ -45,18 +44,31 @@ namespace Xerxes.Utils
                         retAddresses.Add(ip);
                     }
                 }
-                return retAddresses;
+
+                List<int> randomNumbers = UtilitiesGeneral.GenerateListOfRandomNumbers(throttle, retAddresses.Count);
+
+                foreach(int rand in randomNumbers)
+                {
+                    yield return retAddresses[rand];
+                }                
         }
 
-        public static List<IPEndPoint> GetStreetPorts(string[] ports)
-        {
+        public static IEnumerable<IPEndPoint> GetRandomSeedPorts(string[] ports, int throttle)
+        {            
             List<IPEndPoint> retPorts = new List<IPEndPoint>();
-            if(ports.Length == 0) return retPorts;
             foreach(string port in ports)
             {
-                retPorts.Add(new IPEndPoint(IPAddress.Loopback, Int32.Parse(port)));
+                retPorts.Add(new IPEndPoint(IPAddress.Loopback, Int32.Parse(port)));            
             }
-            return retPorts;
+
+            List<int> randomNumbers = UtilitiesGeneral.GenerateListOfRandomNumbers(throttle, retPorts.Count);
+
+            Console.WriteLine("GetRandomSeedPorts throttle:{0} count:{1} indices:{2}", throttle, randomNumbers.Count, randomNumbers.ToString());
+
+            foreach(int rand in randomNumbers)
+            {
+                yield return retPorts[rand];
+            } 
         }
 
     }
