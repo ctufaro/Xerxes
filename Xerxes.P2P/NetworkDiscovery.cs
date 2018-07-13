@@ -18,7 +18,6 @@ namespace Xerxes.P2P
     /// </summary>
     public class NetworkDiscovery
     {
-        private readonly CancellationTokenSource serverCancel;
         private INetworkConfiguration networkConfiguration;
         private UtilitiesConfiguration utilConf;
         private NetworkPeers peers;
@@ -26,22 +25,16 @@ namespace Xerxes.P2P
         {
             this.networkConfiguration = networkConfiguration;
             this.utilConf = utilConf;
-            this.serverCancel = new CancellationTokenSource();
             this.peers = peers;
         }
 
-        public async Task DiscoverPeersAsync(CancellationTokenSource seekReset)
+        public async Task DiscoverPeersAsync()
         {
-            while (!seekReset.IsCancellationRequested)  
-            {                   
-                await Task.Run(async () =>
-                {                    
-                    await GetConnectionsFromDBAsync();
-                    await GetConnectionsFromSeedsAsync();
-                    //await BroadcastSeekAsync();
-                    seekReset.Cancel();
-                });                    
-            } 
+            await Task.Run(async () =>
+            {                    
+                await GetConnectionsFromDBAsync();
+                await GetConnectionsFromSeedsAsync();
+            });  
         }
 
         private async Task GetConnectionsFromDBAsync()
@@ -78,51 +71,6 @@ namespace Xerxes.P2P
                     Merge(ipList, port);
                 }
             });            
-        }
-
-        private async Task BroadcastSeekAsync()
-        {            
-            foreach(NetworkPeer peer in peers.peers.Values)
-            {             
-                Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
-                using (var tcpClient = new TcpClient())
-                {
-                    await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
-                    System.Console.WriteLine("Connected to peer, sending seek message..");
-                    NetworkMessage nm = new NetworkMessage();
-                    IPEndPoint myEndPoint = GetMyEndPoint();
-                    nm.MessageSenderIP = myEndPoint.Address.ToString();
-                    nm.MessageSenderPort = myEndPoint.Port;
-                    nm.MessageStateType = NetworkStateType.Seek;
-                    string json = NetworkMessage.NetworkMessageToJSON(nm);
-                    byte[] bytes = Encoding.UTF8.GetBytes(json);
-                    using (var networkStream = tcpClient.GetStream())
-                    {
-                        Console.WriteLine("Sending to Peer {0}", json);
-                        await networkStream.WriteAsync(bytes, 0, bytes.Length);
-                    }                  
-
-                }                
-            }
-        }
-
-        private IPEndPoint GetMyEndPoint()
-        {
-            if(networkConfiguration.Turf == Turf.Intranet)
-            {
-                int port = this.networkConfiguration.ReceivePort;
-                return new IPEndPoint(IPAddress.Loopback, port); 
-            }
-            else if(networkConfiguration.Turf == Turf.TestNet)
-            {
-                int port = utilConf.GetOrDefault<int>("testnet",0);
-                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port); 
-            }
-            else 
-            {
-                int port = utilConf.GetOrDefault<int>("mainnet",0);
-                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port);
-            } 
         }
 
         private void Merge(IEnumerable<IPEndPoint> ipList)

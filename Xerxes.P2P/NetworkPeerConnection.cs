@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
@@ -20,13 +21,17 @@ namespace Xerxes.P2P
         /// <remarks>Write operations on the stream have to be protected by <see cref="writeLock"/>.</remarks>
         public NetworkStream stream;
         private readonly CancellationTokenSource cancellationSource;
+        private INetworkConfiguration networkConfiguration;
+        private UtilitiesConfiguration utilConf;
+        private NetworkPeers peers;        
 
-        public NetworkPeerConnection(TcpClient client)
+        public NetworkPeerConnection(INetworkConfiguration networkConfiguration, NetworkPeers peers, UtilitiesConfiguration utilConf)
         {
-            this.tcpClient = client;
             this.cancellationSource = new CancellationTokenSource();
-            this.stream = this.tcpClient.GetStream();
-        }
+            this.networkConfiguration = networkConfiguration;
+            this.utilConf = utilConf;
+            this.peers = peers;
+        }        
         
         public async Task<string> ReceiveMessageAsync()
         {
@@ -109,6 +114,74 @@ namespace Xerxes.P2P
                 Console.WriteLine("Error: " + e.ToString());
             }
         }
+
+
+        private async Task BroadcastSeekAsync()
+        {            
+            foreach(NetworkPeer peer in peers.peers.Values)
+            {             
+                Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
+                using (var tcpClient = new TcpClient())
+                {
+                    await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
+                    System.Console.WriteLine("Connected to peer, sending seek message..");
+                    NetworkMessage nm = new NetworkMessage();
+                    IPEndPoint myEndPoint = GetMyEndPoint();
+                    nm.MessageSenderIP = myEndPoint.Address.ToString();
+                    nm.MessageSenderPort = myEndPoint.Port;
+                    nm.MessageStateType = NetworkStateType.Seek;
+                    string json = NetworkMessage.NetworkMessageToJSON(nm);
+                    byte[] bytes = Encoding.UTF8.GetBytes(json);
+                    using (var networkStream = tcpClient.GetStream())
+                    {
+                        Console.WriteLine("Sending to Peer {0}", json);
+                        await networkStream.WriteAsync(bytes, 0, bytes.Length);
+                    }                  
+
+                }                
+            }
+        }
+
+        public async Task BroadcastSingleSeekAsync(NetworkPeer peer)
+        {            
+            Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
+            using (var tcpClient = new TcpClient())
+            {
+                await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
+                System.Console.WriteLine("Connected to peer, sending seek message..");
+                NetworkMessage nm = new NetworkMessage();
+                IPEndPoint myEndPoint = GetMyEndPoint();
+                nm.MessageSenderIP = myEndPoint.Address.ToString();
+                nm.MessageSenderPort = myEndPoint.Port;
+                nm.MessageStateType = NetworkStateType.Seek;
+                string json = NetworkMessage.NetworkMessageToJSON(nm);
+                byte[] bytes = Encoding.UTF8.GetBytes(json);
+                using (var networkStream = tcpClient.GetStream())
+                {
+                    Console.WriteLine("Sending to Peer {0}", json);
+                    await networkStream.WriteAsync(bytes, 0, bytes.Length);
+                }
+            }                
+        }
+
+        public IPEndPoint GetMyEndPoint()
+        {
+            if(networkConfiguration.Turf == Turf.Intranet)
+            {
+                int port = this.networkConfiguration.ReceivePort;
+                return new IPEndPoint(IPAddress.Loopback, port); 
+            }
+            else if(networkConfiguration.Turf == Turf.TestNet)
+            {
+                int port = utilConf.GetOrDefault<int>("testnet",0);
+                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port); 
+            }
+            else 
+            {
+                int port = utilConf.GetOrDefault<int>("mainnet",0);
+                return new IPEndPoint(UtilitiesNetwork.GetMyIPAddress(), port);
+            } 
+        }                    
 
     }
     

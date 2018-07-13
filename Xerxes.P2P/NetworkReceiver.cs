@@ -31,26 +31,32 @@ namespace Xerxes.P2P
         /// <summary>Task accepting new clients in a loop.</summary>
         private Task acceptTask;
 
-        public NetworkReceiver(IPEndPoint localEndPoint, INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
+        private NetworkPeerConnection networkPeerConnection;
+
+        public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf)
         {
-            this.LocalEndpoint = localEndPoint;
+            this.utilConf = utilConf;
+            this.LocalEndpoint = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
             this.tcpListener = new TcpListener(this.LocalEndpoint);
             this.tcpListener.Server.LingerState = new LingerOption(true, 0);
             this.tcpListener.Server.NoDelay = true;
             this.serverCancel = new CancellationTokenSource();
-            this.networkConfiguration = networkConfiguration;
-            this.utilConf = utilConf;            
-            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117));                     
+            this.networkConfiguration = netConfig;                        
+            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117));
+            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.Peers, this.utilConf);
         }
 
-        public void ReceivePeers()    
+        public async Task ReceivePeersAsync()    
         {
             try
             {
-                Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
-                this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                this.tcpListener.Start();
-                this.acceptTask = this.AcceptClientsAsync();
+                await Task.Run(() =>
+                {
+                    Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
+                    this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    this.tcpListener.Start();
+                    this.acceptTask = this.AcceptClientsAsync();
+                });
             }
             catch (Exception e)
             {
@@ -78,7 +84,7 @@ namespace Xerxes.P2P
                             throw exception;
                         }
                     }).ConfigureAwait(false);
-                    NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
+                    networkPeerConnection.stream = tcpClient.GetStream();
                     NetworkMessage message = await networkPeerConnection.GetMessageAsync();
                     IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
                     NetworkPeer networkPeers = new NetworkPeer(ipEndPoint);
@@ -88,6 +94,32 @@ namespace Xerxes.P2P
                 }
             }
             catch { }
+        }
+
+        public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)
+        {
+            IPAddress externalIP = null;
+            int? port = null;
+
+            if(turf == Turf.Intranet)
+            {
+                externalIP = IPAddress.Loopback;
+                port = intranetPort;
+            }
+
+            else if(turf == Turf.TestNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("testnet",0);                
+            }
+
+            else if(turf == Turf.MainNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("mainnet",0);
+            }
+
+            return new IPEndPoint(externalIP, port.Value);
         }
 
     }

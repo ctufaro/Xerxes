@@ -21,7 +21,11 @@ namespace Xerxes.P2P
 
         private UtilitiesConfiguration utilConf;
 
-        private NetworkPeers peers;        
+        private NetworkPeers peers;
+
+        private NetworkDiscovery networkDiscovery;
+
+        private NetworkPeerConnection networkPeerConnection;
 
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
         {
@@ -30,15 +34,16 @@ namespace Xerxes.P2P
             this.networkConfiguration = networkConfiguration;
             this.utilConf = utilConf;
             this.peers = new NetworkPeers();
+            this.networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers, this.utilConf);
+            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.peers, this.utilConf);
         }
 
         public async void SeekPeersAsync()
         {
             try
-            {                
-                NetworkDiscovery networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers, this.utilConf);
+            {              
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
-                Console.WriteLine("Seeking peers in {0} seconds", delay/1000);
+                Console.WriteLine("Seeking peers...");
                 
                 while (!this.serverCancel.IsCancellationRequested)
                 {                   
@@ -47,25 +52,42 @@ namespace Xerxes.P2P
                         while (!this.seekReset.IsCancellationRequested)
                         {
                             //Peer discovery begins
-                            await networkDiscovery.DiscoverPeersAsync(this.seekReset);
+                            await networkDiscovery.DiscoverPeersAsync();
                             Console.WriteLine(this.peers);
+
+                            //Peers populated, let's attempt to connect
+                            await AttemptToConnectAsync(delay,this.seekReset);
+                            
                             this.peers.Clear();
                         }
-                        
-                        //Peer discovery stopped
-                        this.seekReset = new CancellationTokenSource();
+                        this.seekReset = new CancellationTokenSource();                        
                     });
-
-                    //Peers populated, let's attempt to connect
-
-                    //will resume discovery in 
-                    await Task.Delay(delay, this.serverCancel.Token);
                 }
             }
             catch { }
-        } 
+        }
 
-               
+        public async Task AttemptToConnectAsync(int delay, CancellationTokenSource seekRst)
+        {
+            await Task.Run(async ()=>
+            {
+                Console.WriteLine("Attempting to connecting to peers"); 
+                seekRst.CancelAfter(delay);
+                while(!seekRst.IsCancellationRequested)
+                {                    
+                    await ConnectToPeersAsync();                    
+                    Thread.Sleep(1000);
+                }
+            });
+        }
+
+        public async Task ConnectToPeersAsync()
+        {
+            foreach(var peer in this.peers.peers)
+            {
+                await networkPeerConnection.BroadcastSingleSeekAsync(peer.Value);
+            }            
+        }               
 
     }
 }

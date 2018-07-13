@@ -45,7 +45,9 @@ namespace Xerxes.Utils
                     }
                 }
 
-                List<int> randomNumbers = UtilitiesGeneral.GenerateListOfRandomNumbers(throttle, retAddresses.Count);
+                if(throttle > retAddresses.Count) throttle = retAddresses.Count;
+
+                List<int> randomNumbers = UtilitiesGeneral.GenerateUniqueRandomNumbers(throttle, retAddresses.Count);
 
                 foreach(int rand in randomNumbers)
                 {
@@ -55,16 +57,15 @@ namespace Xerxes.Utils
 
         public static IEnumerable<IPEndPoint> GetRandomSeedPorts(string[] ports, int throttle)
         {            
+            if(throttle > ports.Length) throttle = ports.Length;
             List<IPEndPoint> retPorts = new List<IPEndPoint>();
             foreach(string port in ports)
             {
                 retPorts.Add(new IPEndPoint(IPAddress.Loopback, Int32.Parse(port)));            
             }
 
-            List<int> randomNumbers = UtilitiesGeneral.GenerateListOfRandomNumbers(throttle, retPorts.Count);
-
-            Console.WriteLine("GetRandomSeedPorts throttle:{0} count:{1} indices:{2}", throttle, randomNumbers.Count, randomNumbers.ToString());
-
+            List<int> randomNumbers = UtilitiesGeneral.GenerateUniqueRandomNumbers(throttle, retPorts.Count);
+            
             foreach(int rand in randomNumbers)
             {
                 yield return retPorts[rand];

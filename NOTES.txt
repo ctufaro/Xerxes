@@ -1,79 +1,13 @@
 https://en.bitcoin.it/wiki/Satoshi_Client_Node_Discovery
 
-dotnet build
+(1) dotnet build
+ex: dotnet build
 
-dotnet publish <csproj location> -c Release -r win-x64 -o <output location>
---(copy conf to temp dir)
---dotnet publish ./Xerxes.Driver/Xerxes.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
+(2) dotnet publish <csproj location> -c Release -r win-x64 -o <output location> (IMPORTANT: copy conf to temp dir)
+ex: dotnet publish ./Xerxes.Driver/Xerxes.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
 
-dotnet run --project <csproj location>
+(3) dotnet run --project <csproj location>
+ex: dotnet run --project ./Xerxes.Driver/Xerxes.Driver.csproj -r false -v 1000 -s true -t 1
 
-1. used saved connections, if none proceed to 2 [X]
-2. get connections from configuration file [X]
-3. nodes broadcast themselves to the street and saved connections
-4. streets share list with direct peers
-5. connect to a saved connection, a street node, or port (if testing intranet) 
-6. peers connect to random eight
-7. self broadcast and flood
-8. refresh
-9. handshake should be (protocol, software, ipaddress, blockheight)
-
-private async Task SendGossipAsync(string message, int port)
-{
-    try
-    {   
-        
-        if(!visitedPorts.ContainsKey(port))
-        {                
-            using (var tcpClient = new TcpClient())
-            {
-                await tcpClient.ConnectAsync(IPAddress.Loopback, port);
-                await Task.Run(async () =>
-                {
-                    NetworkStream st = tcpClient.GetStream();
-                    visitedPorts.TryAdd(port,st);
-                    byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
-                    await st.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
-                });
-            }                
-        }
-        else
-        {
-            await Task.Run(async () =>
-            {                        
-                byte[] serverResponseBytes = Encoding.UTF8.GetBytes(message);
-                await visitedPorts[port].WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
-            });
-        }
-    }
-    catch { }
-}
-
-public async void SeekPeersAsync()
-{
-    try
-    {
-        Console.WriteLine("Seeking peers");
-        NetworkDiscovery networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers);
-        while (!this.serverCancel.IsCancellationRequested)
-        {
-            using (var tcpClient = new TcpClient())
-            {
-                //await tcpClient.ConnectAsync(singleSeekPoint.Address, singleSeekPoint.Port);
-                //peers.Add(new NetworkPeer(tcpClient));
-                System.Console.WriteLine("Connected to peer, opening stream..");
-
-                await Task.Run(() =>
-                {
-                    NetworkPeerConnection networkPeerConnection = new NetworkPeerConnection(tcpClient);
-                    while (true)
-                    {
-                        Thread.Sleep(1000);
-                        Task conversation = networkPeerConnection.ReceiveConversationAsync();
-                    }
-                });
-            }
-        }
-    }
-    catch { }
-} 
+0. seed nodes startup, start receiving connections
+1. users connect to seed nodes

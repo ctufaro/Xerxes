@@ -17,11 +17,14 @@ namespace Xerxes.Utils
             return appRoot;
         }
 
-        public static List<int> GenerateListOfRandomNumbers(int count, int maxValue){
+        public static List<int> GenerateUniqueRandomNumbers(int count, int maxValue){
             ThreadSafeRandom random = new ThreadSafeRandom(maxValue);
             List<int> randomNumbers = new List<int>();
-            for(int i =0; i<count; i++){
-                randomNumbers.Add(random.Next());
+            while(randomNumbers.Count!=count)
+            {
+                int returnRandom = random.Next(); 
+                if(!randomNumbers.Contains(returnRandom))
+                    randomNumbers.Add(returnRandom);
             }
             return randomNumbers;
         }
@@ -48,7 +51,7 @@ namespace Xerxes.Utils
         }
         public int Next()
         {
-            return _local.Next(1, maxValue);
+            return _local.Next(0, maxValue);
         }
     }
 }

@@ -21,10 +21,13 @@ namespace Xerxes.Driver
         // [Value(0, MetaName = "offset", HelpText = "File offset.")]
         // public long? Offset { get; set; }
 
-        [Option('r', "receive", Required = true, HelpText = "The port the node is listening on.")]
-        public int ReceivePort { get; set; }
+        [Option('r', "receive", Required = true, HelpText = "Flag specifying if accept incoming connections (ex: true/false).")]
+        public bool? Receive { get; set; }
 
-        [Option('s', "seek", Required = true, Default=null, HelpText = "Flag specifying if you want to discover other nodes (ex: true/false).")]
+        [Option('v', "receive port", Required = true, HelpText = "The port the node is receiving.")]
+        public int? ReceivePort { get; set; }        
+
+        [Option('s', "seek", Required = true, Default=null, HelpText = "Flag specifying if you seek outbound connections (ex: true/false).")]
         public bool? Seek { get; set; }        
         
         [Option('p', "seek port", Required = false, Default=null, HelpText = "The port the node is seeking.")]
