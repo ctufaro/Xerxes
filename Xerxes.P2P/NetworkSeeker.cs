@@ -43,7 +43,7 @@ namespace Xerxes.P2P
             try
             {              
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
-                Console.WriteLine("Seeking peers...");
+                //Console.WriteLine("Seeking peers...");
                 
                 while (!this.serverCancel.IsCancellationRequested)
                 {                   
@@ -53,7 +53,7 @@ namespace Xerxes.P2P
                         {
                             //Peer discovery begins
                             await networkDiscovery.DiscoverPeersAsync();
-                            Console.WriteLine(this.peers);
+                            //Console.WriteLine(this.peers);
 
                             //Peers populated, let's attempt to connect
                             await AttemptToConnectAsync(delay,this.seekReset);
@@ -71,7 +71,7 @@ namespace Xerxes.P2P
         {
             await Task.Run(async ()=>
             {
-                Console.WriteLine("Attempting to connecting to peers"); 
+                //Console.WriteLine("Attempting to connecting to peers"); 
                 seekRst.CancelAfter(delay);
                 while(!seekRst.IsCancellationRequested)
                 {                    

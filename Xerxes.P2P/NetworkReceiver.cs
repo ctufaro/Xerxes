@@ -52,7 +52,7 @@ namespace Xerxes.P2P
             {
                 await Task.Run(() =>
                 {
-                    Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
+                    //Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
                     this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     this.tcpListener.Start();
                     this.acceptTask = this.AcceptClientsAsync();
@@ -67,7 +67,8 @@ namespace Xerxes.P2P
         public async Task AcceptClientsAsync()
         {
             try
-            {                
+            {   
+                UtilitiesConsole.Update(UCommand.Status, "Awaiting Connections");
                 while (!this.serverCancel.IsCancellationRequested)
                 {
                     TcpClient tcpClient = await Task.Run(() =>
@@ -89,8 +90,9 @@ namespace Xerxes.P2P
                     IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
                     NetworkPeer networkPeers = new NetworkPeer(ipEndPoint);
                     var result = this.Peers.AddInboundPeer(networkPeers);
-                    Console.WriteLine("Status of Adding Peer: {0}", result.ToString());
-                    Console.WriteLine("Inbound Peer Count: {0}", this.Peers.Count);
+                    //Console.WriteLine("Status of Adding Peer: {0}", result.ToString());
+                    //Console.WriteLine("Inbound Peer Count: {0}", this.Peers.Count);
+                    UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());
                 }
             }
             catch { }

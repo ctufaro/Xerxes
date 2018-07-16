@@ -40,12 +40,12 @@ namespace Xerxes.P2P
                 var buffer = new byte[4096];
                 var byteCount = await this.stream.ReadAsync(buffer, 0, buffer.Length);
                 var request = Encoding.UTF8.GetString(buffer, 0, byteCount);
-                System.Console.WriteLine("Received message {0} from {1}", request, this.tcpClient.Client.RemoteEndPoint);
+                //Console.WriteLine("Received message {0} from {1}", request, this.tcpClient.Client.RemoteEndPoint);
                 return request;
             }
             catch
             {
-                System.Console.WriteLine("Connection Aborted");
+                //Console.WriteLine("Connection Aborted");
                 return "";
             }
         }
@@ -59,9 +59,9 @@ namespace Xerxes.P2P
                 var json = Encoding.UTF8.GetString(buffer, 0, byteCount);
                 return NetworkMessage.JSONToNetworkMessage(json);
             }
-            catch(Exception e)
+            catch(Exception)
             {               
-                Console.WriteLine("Connection Aborted ({0})",e.ToString());
+                //Console.WriteLine("Connection Aborted ({0})",e.ToString());
                 return null;                
             }
         }  
@@ -73,11 +73,11 @@ namespace Xerxes.P2P
                 string response = DateTime.Now.ToString();
                 byte[] serverResponseBytes = Encoding.UTF8.GetBytes(response);
                 await stream.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
-                System.Console.WriteLine("Sent message {0}", response);
+                //Console.WriteLine("Sent message {0}", response);
             }
-            catch(Exception e)
+            catch(Exception)
             {
-                Console.WriteLine("Connection Aborted ({0})",e.ToString());
+                //Console.WriteLine("Connection Aborted ({0})",e.ToString());
             }           
         }
 
@@ -92,9 +92,9 @@ namespace Xerxes.P2P
                     await ReceiveMessageAsync();
                 }
             }
-            catch(Exception e)
+            catch(Exception)
             {
-                Console.WriteLine("Error: " + e.ToString());
+                //Console.WriteLine("Error: " + e.ToString());
             }
         }
 
@@ -109,9 +109,9 @@ namespace Xerxes.P2P
                     await ReceiveMessageAsync();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine("Error: " + e.ToString());
+                //Console.WriteLine("Error: " + e.ToString());
             }
         }
 
@@ -120,11 +120,11 @@ namespace Xerxes.P2P
         {            
             foreach(NetworkPeer peer in peers.peers.Values)
             {             
-                Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
+                //Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
                 using (var tcpClient = new TcpClient())
                 {
                     await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
-                    System.Console.WriteLine("Connected to peer, sending seek message..");
+                    //Console.WriteLine("Connected to peer, sending seek message..");
                     NetworkMessage nm = new NetworkMessage();
                     IPEndPoint myEndPoint = GetMyEndPoint();
                     nm.MessageSenderIP = myEndPoint.Address.ToString();
@@ -134,7 +134,7 @@ namespace Xerxes.P2P
                     byte[] bytes = Encoding.UTF8.GetBytes(json);
                     using (var networkStream = tcpClient.GetStream())
                     {
-                        Console.WriteLine("Sending to Peer {0}", json);
+                        //Console.WriteLine("Sending to Peer {0}", json);
                         await networkStream.WriteAsync(bytes, 0, bytes.Length);
                     }                  
 
@@ -144,11 +144,11 @@ namespace Xerxes.P2P
 
         public async Task BroadcastSingleSeekAsync(NetworkPeer peer)
         {            
-            Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
+            //Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
             using (var tcpClient = new TcpClient())
             {
                 await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
-                System.Console.WriteLine("Connected to peer, sending seek message..");
+                //Console.WriteLine("Connected to peer, sending seek message..");
                 NetworkMessage nm = new NetworkMessage();
                 IPEndPoint myEndPoint = GetMyEndPoint();
                 nm.MessageSenderIP = myEndPoint.Address.ToString();
@@ -158,7 +158,7 @@ namespace Xerxes.P2P
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
                 using (var networkStream = tcpClient.GetStream())
                 {
-                    Console.WriteLine("Sending to Peer {0}", json);
+                    //Console.WriteLine("Sending to Peer {0}", json);
                     await networkStream.WriteAsync(bytes, 0, bytes.Length);
                 }
             }                
