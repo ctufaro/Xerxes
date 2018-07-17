@@ -42,7 +42,7 @@ namespace Xerxes.P2P
             this.tcpListener.Server.NoDelay = true;
             this.serverCancel = new CancellationTokenSource();
             this.networkConfiguration = netConfig;                        
-            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117));
+            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117), utilConf.GetOrDefault<int>("maxoutbound",8));
             this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.Peers, this.utilConf);
         }
 
@@ -60,7 +60,7 @@ namespace Xerxes.P2P
             }
             catch (Exception e)
             {
-                throw e;
+                Console.WriteLine(e.ToString());
             }
         }      
                 
@@ -95,7 +95,10 @@ namespace Xerxes.P2P
                     UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)

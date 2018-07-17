@@ -21,8 +21,8 @@ namespace Xerxes.P2P
 
         private UtilitiesConfiguration utilConf;
 
-        private NetworkPeers peers;
-
+        private NetworkPeers foundPeers;
+        private NetworkPeers establishedPeers;
         private NetworkDiscovery networkDiscovery;
 
         private NetworkPeerConnection networkPeerConnection;
@@ -33,9 +33,10 @@ namespace Xerxes.P2P
             this.seekReset = new CancellationTokenSource();
             this.networkConfiguration = networkConfiguration;
             this.utilConf = utilConf;
-            this.peers = new NetworkPeers();
-            this.networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.peers, this.utilConf);
-            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.peers, this.utilConf);
+            this.foundPeers = new NetworkPeers();
+            this.establishedPeers = new NetworkPeers();
+            this.networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.foundPeers, this.utilConf);
+            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.foundPeers, this.establishedPeers, this.utilConf);
         }
 
         public async void SeekPeersAsync()
@@ -43,7 +44,8 @@ namespace Xerxes.P2P
             try
             {              
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
-                //Console.WriteLine("Seeking peers...");
+                UtilitiesConsole.Update(UCommand.Status, "Seeking Peers");
+                Thread.Sleep(1000);
                 
                 while (!this.serverCancel.IsCancellationRequested)
                 {                   
@@ -58,7 +60,7 @@ namespace Xerxes.P2P
                             //Peers populated, let's attempt to connect
                             await AttemptToConnectAsync(delay,this.seekReset);
                             
-                            this.peers.Clear();
+                            this.establishedPeers.Clear();
                         }
                         this.seekReset = new CancellationTokenSource();                        
                     });
@@ -83,7 +85,7 @@ namespace Xerxes.P2P
 
         public async Task ConnectToPeersAsync()
         {
-            foreach(var peer in this.peers.peers)
+            foreach(var peer in this.foundPeers.peers)
             {
                 await networkPeerConnection.BroadcastSingleSeekAsync(peer.Value);
             }            

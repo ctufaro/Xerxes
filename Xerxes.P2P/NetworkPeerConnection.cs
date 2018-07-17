@@ -23,15 +23,26 @@ namespace Xerxes.P2P
         private readonly CancellationTokenSource cancellationSource;
         private INetworkConfiguration networkConfiguration;
         private UtilitiesConfiguration utilConf;
-        private NetworkPeers peers;        
+        private NetworkPeers foundPeers;     
+        private NetworkPeers establishedPeers;    
 
-        public NetworkPeerConnection(INetworkConfiguration networkConfiguration, NetworkPeers peers, UtilitiesConfiguration utilConf)
+
+        public NetworkPeerConnection(INetworkConfiguration networkConfiguration, NetworkPeers foundPeers, NetworkPeers establishedPeers, UtilitiesConfiguration utilConf)
         {
             this.cancellationSource = new CancellationTokenSource();
             this.networkConfiguration = networkConfiguration;
             this.utilConf = utilConf;
-            this.peers = peers;
-        }        
+            this.foundPeers = foundPeers;
+            this.establishedPeers = establishedPeers;
+        }
+
+        public NetworkPeerConnection(INetworkConfiguration networkConfiguration, NetworkPeers establishedPeers, UtilitiesConfiguration utilConf)
+        {
+            this.cancellationSource = new CancellationTokenSource();
+            this.networkConfiguration = networkConfiguration;
+            this.utilConf = utilConf;
+            this.establishedPeers = establishedPeers;
+        }               
         
         public async Task<string> ReceiveMessageAsync()
         {
@@ -118,7 +129,7 @@ namespace Xerxes.P2P
 
         private async Task BroadcastSeekAsync()
         {            
-            foreach(NetworkPeer peer in peers.peers.Values)
+            foreach(NetworkPeer peer in foundPeers.peers.Values)
             {             
                 //Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
                 using (var tcpClient = new TcpClient())
@@ -144,11 +155,12 @@ namespace Xerxes.P2P
 
         public async Task BroadcastSingleSeekAsync(NetworkPeer peer)
         {            
-            //Console.WriteLine("Broadcasting to Peer: {0}", peer.IPEnd.ToString());
             using (var tcpClient = new TcpClient())
-            {
-                await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);
-                //Console.WriteLine("Connected to peer, sending seek message..");
+            {                
+                await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);                
+                NetworkPeerMessage message = this.establishedPeers.AddOutboundPeer(peer);
+                UtilitiesConsole.Update(UCommand.Status, "Message status: " + message.ToString());
+                UtilitiesConsole.Update(UCommand.OutboundPeers, this.establishedPeers.Count.ToString());
                 NetworkMessage nm = new NetworkMessage();
                 IPEndPoint myEndPoint = GetMyEndPoint();
                 nm.MessageSenderIP = myEndPoint.Address.ToString();
@@ -157,8 +169,7 @@ namespace Xerxes.P2P
                 string json = NetworkMessage.NetworkMessageToJSON(nm);
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
                 using (var networkStream = tcpClient.GetStream())
-                {
-                    //Console.WriteLine("Sending to Peer {0}", json);
+                {                   
                     await networkStream.WriteAsync(bytes, 0, bytes.Length);
                 }
             }                
