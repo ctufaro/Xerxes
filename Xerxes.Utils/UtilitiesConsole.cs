@@ -12,7 +12,10 @@ namespace Xerxes.Utils
         private static readonly Lazy<UtilitiesConsole> lazy = new Lazy<UtilitiesConsole>(() => new UtilitiesConsole());
     
         public static UtilitiesConsole Instance { get { return lazy.Value; } }
-        private UCommand[] stats = new UCommand[]{UCommand.InBoundPeers, UCommand.OutboundPeers, UCommand.Status};
+        private UCommand[] stats = new UCommand[]{UCommand.OutboundPeers,
+                                                  UCommand.InBoundPeers,
+                                                  UCommand.StatusOutbound,
+                                                  UCommand.StatusInbound};
         private static int spCnt;
 
         private UtilitiesConsole()
@@ -64,7 +67,8 @@ namespace Xerxes.Utils
         public string Value { get; set; }        
         public static UCommand OutboundPeers { get { return new UCommand("Outbound Peers"); } }
         public static UCommand InBoundPeers { get { return new UCommand("Inbound Peers"); } }
-        public static UCommand Status { get { return new UCommand("Status"); } }
+        public static UCommand StatusOutbound { get { return new UCommand("Status (Outbound)"); } }
+        public static UCommand StatusInbound { get { return new UCommand("Status (Inbound)"); } }
     }
 
 }

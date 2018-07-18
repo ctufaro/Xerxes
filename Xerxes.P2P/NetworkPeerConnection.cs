@@ -159,7 +159,7 @@ namespace Xerxes.P2P
             {                
                 await tcpClient.ConnectAsync(peer.IPEnd.Address, peer.IPEnd.Port);                
                 NetworkPeerMessage message = this.establishedPeers.AddOutboundPeer(peer);
-                UtilitiesConsole.Update(UCommand.Status, "Message status: " + message.ToString());
+                UtilitiesConsole.Update(UCommand.StatusOutbound, "Message status: " + message.ToString());
                 UtilitiesConsole.Update(UCommand.OutboundPeers, this.establishedPeers.Count.ToString());
                 NetworkMessage nm = new NetworkMessage();
                 IPEndPoint myEndPoint = GetMyEndPoint();

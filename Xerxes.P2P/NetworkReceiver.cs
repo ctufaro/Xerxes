@@ -68,7 +68,7 @@ namespace Xerxes.P2P
         {
             try
             {   
-                UtilitiesConsole.Update(UCommand.Status, "Awaiting Connections");
+                UtilitiesConsole.Update(UCommand.StatusInbound, "Awaiting Connections");
                 while (!this.serverCancel.IsCancellationRequested)
                 {
                     TcpClient tcpClient = await Task.Run(() =>

@@ -44,7 +44,7 @@ namespace Xerxes.P2P
             try
             {              
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
-                UtilitiesConsole.Update(UCommand.Status, "Seeking Peers");
+                UtilitiesConsole.Update(UCommand.StatusOutbound, "Seeking Peers");
                 Thread.Sleep(1000);
                 
                 while (!this.serverCancel.IsCancellationRequested)

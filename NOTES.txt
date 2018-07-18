@@ -7,7 +7,7 @@ ex: dotnet build
 ex: dotnet publish ./Xerxes.Driver/Xerxes.Driver.csproj -c Release -r win-x64 -o C:\Temp\Xerxes
 
 (3) dotnet run --project <csproj location>
-ex: dotnet run --project ./Xerxes.Driver/Xerxes.Driver.csproj -r false -v 1000 -s true -t 1
+ex: dotnet run --project ./Xerxes.Driver/Xerxes.Driver.csproj -r true -v 1000 -s true -t 1
 
 0. seed nodes startup, start receiving connections
 1. users connect to seed nodes
