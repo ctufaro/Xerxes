@@ -6,6 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xerxes.Utils;
+using GenericProtocol;
+using GenericProtocol.Implementation;
+using System.Linq;
 
 namespace Xerxes.P2P
 {
@@ -21,7 +24,7 @@ namespace Xerxes.P2P
         private UtilitiesConfiguration utilConf;                
 
         /// <summary>TCP server listener accepting inbound connections.</summary>
-        private readonly TcpListener tcpListener;      
+        private ProtoServer<string> receiver;     
 
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
@@ -29,21 +32,15 @@ namespace Xerxes.P2P
         /// <summary>List of all inbound peers.</summary>
         private NetworkPeers Peers;
         /// <summary>Task accepting new clients in a loop.</summary>
-        private Task acceptTask;
-
-        private NetworkPeerConnection networkPeerConnection;
-
+       
         public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf)
         {
             this.utilConf = utilConf;
             this.LocalEndpoint = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
-            this.tcpListener = new TcpListener(this.LocalEndpoint);
-            this.tcpListener.Server.LingerState = new LingerOption(true, 0);
-            this.tcpListener.Server.NoDelay = true;
+            this.receiver = new ProtoServer<string>(this.LocalEndpoint.Address, this.LocalEndpoint.Port);
             this.serverCancel = new CancellationTokenSource();
             this.networkConfiguration = netConfig;                        
-            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117), utilConf.GetOrDefault<int>("maxoutbound",8));
-            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.Peers, this.utilConf);
+            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117), utilConf.GetOrDefault<int>("maxoutbound",8));            
         }
 
         public async Task ReceivePeersAsync()    
@@ -51,54 +48,45 @@ namespace Xerxes.P2P
             try
             {
                 await Task.Run(() =>
-                {
-                    //Console.WriteLine("Receiving peers on '{0}'.", this.LocalEndpoint);
-                    this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    this.tcpListener.Start();
-                    this.acceptTask = this.AcceptClientsAsync();
+                {                    
+                    receiver.Start();
+                    UtilitiesConsole.Update(UCommand.StatusInbound, "Server started on " + this.LocalEndpoint.ToString());
+                    receiver.ClientConnected += ClientConnectedAsync;
+                    receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
-        }      
-                
-        public async Task AcceptClientsAsync()
+        }
+
+        public async void ClientConnectedAsync(IPEndPoint address)
         {
             try
-            {   
-                UtilitiesConsole.Update(UCommand.StatusInbound, "Awaiting Connections");
-                while (!this.serverCancel.IsCancellationRequested)
-                {
-                    TcpClient tcpClient = await Task.Run(() =>
-                    {
-                        try
-                        {
-                            Task<TcpClient> acceptClientTask = this.tcpListener.AcceptTcpClientAsync();
-                            acceptClientTask.Wait(this.serverCancel.Token);
-                            return acceptClientTask.Result;
-                        }
-                        catch (Exception exception)
-                        {
-                            // Record the error.
-                            throw exception;
-                        }
-                    }).ConfigureAwait(false);
-                    networkPeerConnection.stream = tcpClient.GetStream();
-                    NetworkMessage message = await networkPeerConnection.GetMessageAsync();
-                    IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
-                    NetworkPeer networkPeers = new NetworkPeer(ipEndPoint);
-                    var result = this.Peers.AddInboundPeer(networkPeers);
-                    //Console.WriteLine("Status of Adding Peer: {0}", result.ToString());
-                    //Console.WriteLine("Inbound Peer Count: {0}", this.Peers.Count);
-                    UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());
-                }
+            {
+                
+                UtilitiesConsole.Update(UCommand.StatusInbound, "ClientConnectedAsync Receiver Null? " + (receiver==null)); 
+                await receiver.Send(message:"0", to:address);
+                UtilitiesConsole.Update(UCommand.StatusInbound, "Peer Connected, Awaiting Message");                
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        private async void ServerMessageReceivedAsync(IPEndPoint sender, string message)
+        {
+            Console.WriteLine($"{sender}: {message}");
+            if(message.Equals("0")){
+                await receiver.Send("1", sender);
+                NetworkPeer networkPeers = new NetworkPeer(sender);
+                var result = this.Peers.AddInboundPeer(networkPeers);
+                UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
+                UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());              
+            }
+                
         }
 
         public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)

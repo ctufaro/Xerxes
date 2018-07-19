@@ -6,37 +6,36 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GenericProtocol.Implementation;
 using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {
     public class NetworkSeeker
     {
+        private ProtoClient<string> seeker; 
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
 
         public CancellationTokenSource seekReset;
         
-        private INetworkConfiguration networkConfiguration;
+        private INetworkConfiguration netConfig;
 
         private UtilitiesConfiguration utilConf;
 
-        private NetworkPeers foundPeers;
-        private NetworkPeers establishedPeers;
+        private List<IPEndPoint> foundEndPoints;
+        private NetworkPeers peers;
         private NetworkDiscovery networkDiscovery;
-
-        private NetworkPeerConnection networkPeerConnection;
 
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
         {
             this.serverCancel = new CancellationTokenSource();
             this.seekReset = new CancellationTokenSource();
-            this.networkConfiguration = networkConfiguration;
+            this.netConfig = networkConfiguration;
             this.utilConf = utilConf;
-            this.foundPeers = new NetworkPeers();
-            this.establishedPeers = new NetworkPeers();
-            this.networkDiscovery = new NetworkDiscovery(this.networkConfiguration, this.foundPeers, this.utilConf);
-            this.networkPeerConnection = new NetworkPeerConnection(this.networkConfiguration, this.foundPeers, this.establishedPeers, this.utilConf);
+            this.foundEndPoints = new List<IPEndPoint>();
+            this.peers = new NetworkPeers();
+            this.networkDiscovery = new NetworkDiscovery(this.netConfig, this.foundEndPoints, this.utilConf);            
         }
 
         public async void SeekPeersAsync()
@@ -55,12 +54,11 @@ namespace Xerxes.P2P
                         {
                             //Peer discovery begins
                             await networkDiscovery.DiscoverPeersAsync();
-                            //Console.WriteLine(this.peers);
 
                             //Peers populated, let's attempt to connect
                             await AttemptToConnectAsync(delay,this.seekReset);
                             
-                            this.establishedPeers.Clear();
+                            this.peers.Clear();
                         }
                         this.seekReset = new CancellationTokenSource();                        
                     });
@@ -73,7 +71,6 @@ namespace Xerxes.P2P
         {
             await Task.Run(async ()=>
             {
-                //Console.WriteLine("Attempting to connecting to peers"); 
                 seekRst.CancelAfter(delay);
                 while(!seekRst.IsCancellationRequested)
                 {                    
@@ -85,11 +82,48 @@ namespace Xerxes.P2P
 
         public async Task ConnectToPeersAsync()
         {
-            foreach(var peer in this.foundPeers.peers)
+            UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
+            foreach(var endPoint in this.foundEndPoints)
             {
-                await networkPeerConnection.BroadcastSingleSeekAsync(peer.Value);
+                IPEndPoint myLocalEnd = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
+                this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = false };
+                this.seeker.ReceivedMessage += ClientMessageReceived;
+                await this.seeker.Connect();                
+                UtilitiesConsole.Update(UCommand.StatusOutbound, "Sending Seek To " + endPoint.ToString());
+                this.seeker.Send("0");                
             }            
         }               
+
+        private void ClientMessageReceived(IPEndPoint sender, string message)
+        {
+            Console.WriteLine($"All is good! {sender}: {message}");
+        }
+
+        public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)
+        {
+            IPAddress externalIP = null;
+            int? port = null;
+
+            if(turf == Turf.Intranet)
+            {
+                externalIP = IPAddress.Loopback;
+                port = intranetPort;
+            }
+
+            else if(turf == Turf.TestNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("testnet",0);                
+            }
+
+            else if(turf == Turf.MainNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("mainnet",0);
+            }
+
+            return new IPEndPoint(externalIP, port.Value);
+        }        
 
     }
 }

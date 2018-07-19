@@ -20,12 +20,12 @@ namespace Xerxes.P2P
     {
         private INetworkConfiguration networkConfiguration;
         private UtilitiesConfiguration utilConf;
-        private NetworkPeers peers;
-        public NetworkDiscovery(INetworkConfiguration networkConfiguration, NetworkPeers peers, UtilitiesConfiguration utilConf)
+        private List<IPEndPoint> endPoints;
+        public NetworkDiscovery(INetworkConfiguration networkConfiguration, List<IPEndPoint> endPoints, UtilitiesConfiguration utilConf)
         {
             this.networkConfiguration = networkConfiguration;
             this.utilConf = utilConf;
-            this.peers = peers;
+            this.endPoints = endPoints;
         }
 
         public async Task DiscoverPeersAsync()
@@ -80,7 +80,7 @@ namespace Xerxes.P2P
             {
                 foreach(IPEndPoint iEP in toBeMerged)
                 {
-                    this.peers.AddPeer(new NetworkPeer(iEP));
+                    this.endPoints.Add(iEP);
                 }
             }
         }
@@ -92,7 +92,7 @@ namespace Xerxes.P2P
                 foreach(IPAddress iAD in toBeMerged)
                 {
                     IPEndPoint iEP = new IPEndPoint(iAD, port);
-                    this.peers.AddPeer(new NetworkPeer(iEP));
+                    this.endPoints.Add(iEP);
                 }
             }
         }

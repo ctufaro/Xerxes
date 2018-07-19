@@ -3,6 +3,7 @@
     <ProjectReference Include="..\Xerxes.Utils\Xerxes.Utils.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GenericProtocol" Version="1.0.35" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
   <PropertyGroup>

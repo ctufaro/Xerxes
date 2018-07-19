@@ -6,9 +6,5 @@ namespace Xerxes.P2P
     {
         public Turf Turf { get ; set; }
         public int ReceivePort {get; set;}
-        public NetworkConfiguration()
-        {
-            
-        }
     }
 }
