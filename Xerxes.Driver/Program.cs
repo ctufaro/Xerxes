@@ -18,7 +18,7 @@ namespace Xerxes.Driver
         {
             if (Debugger.IsAttached)
             {
-                Start(new Options { ReceivePort = 1111 });
+                Start(new Options { Receive = false, ReceivePort = 1000, Seek = true, Turf = 1 });
             }
             else
             {

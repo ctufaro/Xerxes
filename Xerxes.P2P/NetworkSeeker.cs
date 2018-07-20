@@ -88,9 +88,9 @@ namespace Xerxes.P2P
                 IPEndPoint myLocalEnd = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
                 this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = false };
                 this.seeker.ReceivedMessage += ClientMessageReceived;
-                await this.seeker.Connect();                
+                await this.seeker.Connect(true);                
                 UtilitiesConsole.Update(UCommand.StatusOutbound, "Sending Seek To " + endPoint.ToString());
-                this.seeker.Send("0");                
+                await this.seeker.Send("0");                
             }            
         }               
 
