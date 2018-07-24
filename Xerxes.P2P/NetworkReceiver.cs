@@ -14,8 +14,6 @@ namespace Xerxes.P2P
 {
     public class NetworkReceiver
     {
-        private static Random r = new Random();
-        
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
 
@@ -36,7 +34,7 @@ namespace Xerxes.P2P
         public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf)
         {
             this.utilConf = utilConf;
-            this.LocalEndpoint = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
+            this.LocalEndpoint = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
             this.receiver = new ProtoServer<string>(this.LocalEndpoint.Address, this.LocalEndpoint.Port);
             this.serverCancel = new CancellationTokenSource();
             this.networkConfiguration = netConfig;                        
@@ -50,7 +48,8 @@ namespace Xerxes.P2P
                 await Task.Run(() =>
                 {                    
                     receiver.Start();
-                    UtilitiesConsole.Update(UCommand.StatusInbound, "Server started on " + this.LocalEndpoint.ToString());
+                    //UtilitiesConsole.Update(UCommand.StatusInbound, "Server started on " + this.LocalEndpoint.ToString());
+                    Console.WriteLine("From the receiver: Server started on " + this.LocalEndpoint.ToString());
                     receiver.ClientConnected += ClientConnectedAsync;
                     receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
@@ -61,14 +60,12 @@ namespace Xerxes.P2P
             }
         }
 
-        public async void ClientConnectedAsync(IPEndPoint address)
+        private async void ClientConnectedAsync(IPEndPoint address)
         {
             try
-            {
-                
-                UtilitiesConsole.Update(UCommand.StatusInbound, "ClientConnectedAsync Receiver Null? " + (receiver==null)); 
-                await receiver.Send(message:"0", to:address);
-                UtilitiesConsole.Update(UCommand.StatusInbound, "Peer Connected, Awaiting Message");                
+            {   
+                await receiver.Send(message:"0", to:address);  
+                Console.WriteLine("From the receiver: Peer Connected, Awaiting Message");
             }
             catch (Exception e)
             {
@@ -83,37 +80,13 @@ namespace Xerxes.P2P
                 await receiver.Send("1", sender);
                 NetworkPeer networkPeers = new NetworkPeer(sender);
                 var result = this.Peers.AddInboundPeer(networkPeers);
-                UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
-                UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());              
+                //UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
+                Console.WriteLine("From the receiver: Handshake Sent");
+                //UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());
+                Console.WriteLine("From the receiver: Peer Count {0}", this.Peers.Count.ToString());
             }
                 
         }
-
-        public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)
-        {
-            IPAddress externalIP = null;
-            int? port = null;
-
-            if(turf == Turf.Intranet)
-            {
-                externalIP = IPAddress.Loopback;
-                port = intranetPort;
-            }
-
-            else if(turf == Turf.TestNet)
-            {
-                externalIP = UtilitiesNetwork.GetMyIPAddress();
-                port = utilConf.GetOrDefault<int>("testnet",0);                
-            }
-
-            else if(turf == Turf.MainNet)
-            {
-                externalIP = UtilitiesNetwork.GetMyIPAddress();
-                port = utilConf.GetOrDefault<int>("mainnet",0);
-            }
-
-            return new IPEndPoint(externalIP, port.Value);
-        }
-
+  
     }
 }

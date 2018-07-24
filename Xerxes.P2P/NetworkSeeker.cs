@@ -14,6 +14,7 @@ namespace Xerxes.P2P
     public class NetworkSeeker
     {
         private ProtoClient<string> seeker; 
+        
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
 
@@ -24,7 +25,9 @@ namespace Xerxes.P2P
         private UtilitiesConfiguration utilConf;
 
         private List<IPEndPoint> foundEndPoints;
+
         private NetworkPeers peers;
+
         private NetworkDiscovery networkDiscovery;
 
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
@@ -43,7 +46,8 @@ namespace Xerxes.P2P
             try
             {              
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin",86400000);
-                UtilitiesConsole.Update(UCommand.StatusOutbound, "Seeking Peers");
+                //UtilitiesConsole.Update(UCommand.StatusOutbound, "Seeking Peers");
+                Console.WriteLine("From the seeker: Seeking Peers");
                 Thread.Sleep(1000);
                 
                 while (!this.serverCancel.IsCancellationRequested)
@@ -67,7 +71,7 @@ namespace Xerxes.P2P
             catch { }
         }
 
-        public async Task AttemptToConnectAsync(int delay, CancellationTokenSource seekRst)
+        private async Task AttemptToConnectAsync(int delay, CancellationTokenSource seekRst)
         {
             await Task.Run(async ()=>
             {
@@ -80,16 +84,18 @@ namespace Xerxes.P2P
             });
         }
 
-        public async Task ConnectToPeersAsync()
+        private async Task ConnectToPeersAsync()
         {
-            UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
-            foreach(var endPoint in this.foundEndPoints)
+            //UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
+            Console.WriteLine("From the seeker: Peers to Connect to {0}", this.foundEndPoints.Count);
+            Thread.Sleep(5000);
+            foreach (var endPoint in this.foundEndPoints)
             {
-                IPEndPoint myLocalEnd = GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
-                this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = false };
+                IPEndPoint myLocalEnd = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
+                this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
                 this.seeker.ReceivedMessage += ClientMessageReceived;
-                await this.seeker.Connect(true);                
-                UtilitiesConsole.Update(UCommand.StatusOutbound, "Sending Seek To " + endPoint.ToString());
+                await this.seeker.Connect(true);
+                Console.WriteLine("From the seeker: Peers to Connect to " + endPoint.ToString());
                 await this.seeker.Send("0");                
             }            
         }               
@@ -97,33 +103,7 @@ namespace Xerxes.P2P
         private void ClientMessageReceived(IPEndPoint sender, string message)
         {
             Console.WriteLine($"All is good! {sender}: {message}");
-        }
-
-        public IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)
-        {
-            IPAddress externalIP = null;
-            int? port = null;
-
-            if(turf == Turf.Intranet)
-            {
-                externalIP = IPAddress.Loopback;
-                port = intranetPort;
-            }
-
-            else if(turf == Turf.TestNet)
-            {
-                externalIP = UtilitiesNetwork.GetMyIPAddress();
-                port = utilConf.GetOrDefault<int>("testnet",0);                
-            }
-
-            else if(turf == Turf.MainNet)
-            {
-                externalIP = UtilitiesNetwork.GetMyIPAddress();
-                port = utilConf.GetOrDefault<int>("mainnet",0);
-            }
-
-            return new IPEndPoint(externalIP, port.Value);
-        }        
+        }             
 
     }
 }

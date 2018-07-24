@@ -51,7 +51,7 @@ namespace Xerxes.Utils
             }
         }
 
-        public static void Update(UCommand key, string value)
+        public static void Updates(UCommand key, string value)
         {
             var p = shit[key.Value];
             Console.SetCursorPosition(0, p.Item1);

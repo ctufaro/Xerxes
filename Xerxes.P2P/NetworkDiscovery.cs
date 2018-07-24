@@ -21,6 +21,7 @@ namespace Xerxes.P2P
         private INetworkConfiguration networkConfiguration;
         private UtilitiesConfiguration utilConf;
         private List<IPEndPoint> endPoints;
+
         public NetworkDiscovery(INetworkConfiguration networkConfiguration, List<IPEndPoint> endPoints, UtilitiesConfiguration utilConf)
         {
             this.networkConfiguration = networkConfiguration;
@@ -84,6 +85,7 @@ namespace Xerxes.P2P
                 }
             }
         }
+
         private void Merge(IEnumerable<IPAddress> ipList, int port)
         {
             List<IPAddress> toBeMerged = ipList.ToList();
@@ -95,6 +97,32 @@ namespace Xerxes.P2P
                     this.endPoints.Add(iEP);
                 }
             }
+        }
+
+        public static IPEndPoint GetEndPoint(Turf turf, UtilitiesConfiguration utilConf, int intranetPort)
+        {
+            IPAddress externalIP = null;
+            int? port = null;
+
+            if (turf == Turf.Intranet)
+            {
+                externalIP = IPAddress.Loopback;
+                port = intranetPort;
+            }
+
+            else if (turf == Turf.TestNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("testnet", 0);
+            }
+
+            else if (turf == Turf.MainNet)
+            {
+                externalIP = UtilitiesNetwork.GetMyIPAddress();
+                port = utilConf.GetOrDefault<int>("mainnet", 0);
+            }
+
+            return new IPEndPoint(externalIP, port.Value);
         }
 
     }
