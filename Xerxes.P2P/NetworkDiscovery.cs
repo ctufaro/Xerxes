@@ -18,15 +18,17 @@ namespace Xerxes.P2P
     /// </summary>
     public class NetworkDiscovery
     {
-        private INetworkConfiguration networkConfiguration;
+        private INetworkConfiguration networkConf;
         private UtilitiesConfiguration utilConf;
         private List<IPEndPoint> endPoints;
+        private IPEndPoint self;
 
         public NetworkDiscovery(INetworkConfiguration networkConfiguration, List<IPEndPoint> endPoints, UtilitiesConfiguration utilConf)
         {
-            this.networkConfiguration = networkConfiguration;
+            this.networkConf = networkConfiguration;
             this.utilConf = utilConf;
             this.endPoints = endPoints;
+            this.self = GetEndPoint(networkConf.Turf, utilConf, networkConf.ReceivePort);
         }
 
         public async Task DiscoverPeersAsync()
@@ -51,20 +53,20 @@ namespace Xerxes.P2P
         {
             await Task.Run(()=>
             {
-                if(networkConfiguration.Turf == Turf.Intranet)
+                if(networkConf.Turf == Turf.Intranet)
                 {
                     string[] ports = utilConf.GetOrDefault<string>("intraports","").Split(',', StringSplitOptions.RemoveEmptyEntries);
                     IEnumerable<IPEndPoint> ipList = UtilitiesNetwork.GetRandomSeedPorts(ports, utilConf.GetOrDefault<int>("seedsreturned",3));
                     Merge(ipList);
                 }
-                else if(networkConfiguration.Turf == Turf.TestNet)
+                else if(networkConf.Turf == Turf.TestNet)
                 {
                     int port = utilConf.GetOrDefault<int>("testnet",0);
                     string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
                     IEnumerable<IPAddress> ipList = UtilitiesNetwork.GetRandomSeedNodes(dnsnames, utilConf.GetOrDefault<int>("seedsreturned",3));
                     Merge(ipList, port);
                 }
-                else if(networkConfiguration.Turf == Turf.MainNet)
+                else if(networkConf.Turf == Turf.MainNet)
                 {
                     int port = utilConf.GetOrDefault<int>("mainnet",0);
                     string[] dnsnames = utilConf.GetOrDefault<string>("dnsseeds","").Split(',', StringSplitOptions.RemoveEmptyEntries);
@@ -81,6 +83,7 @@ namespace Xerxes.P2P
             {
                 foreach(IPEndPoint iEP in toBeMerged)
                 {
+                    if(iEP.Equals(self)) continue;
                     this.endPoints.Add(iEP);
                 }
             }
@@ -94,6 +97,7 @@ namespace Xerxes.P2P
                 foreach(IPAddress iAD in toBeMerged)
                 {
                     IPEndPoint iEP = new IPEndPoint(iAD, port);
+                    if(iEP.Equals(self)) continue;
                     this.endPoints.Add(iEP);
                 }
             }

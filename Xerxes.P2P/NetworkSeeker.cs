@@ -95,7 +95,7 @@ namespace Xerxes.P2P
                 this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
                 this.seeker.ReceivedMessage += ClientMessageReceived;
                 await this.seeker.Connect(true);
-                Console.WriteLine("From the seeker: Peers to Connect to " + endPoint.ToString());
+                Console.WriteLine("From the seeker: Connecting to " + endPoint.ToString());
                 await this.seeker.Send("0");                
             }            
         }               
