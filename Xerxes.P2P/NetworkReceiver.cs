@@ -22,7 +22,7 @@ namespace Xerxes.P2P
         private UtilitiesConfiguration utilConf;                
 
         /// <summary>TCP server listener accepting inbound connections.</summary>
-        private ProtoServer<string> receiver;     
+        private ProtoServer<NetworkMessage> receiver;     
 
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
@@ -35,7 +35,7 @@ namespace Xerxes.P2P
         {
             this.utilConf = utilConf;
             this.LocalEndpoint = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
-            this.receiver = new ProtoServer<string>(this.LocalEndpoint.Address, this.LocalEndpoint.Port);
+            this.receiver = new ProtoServer<NetworkMessage>(this.LocalEndpoint.Address, this.LocalEndpoint.Port);
             this.serverCancel = new CancellationTokenSource();
             this.networkConfiguration = netConfig;                        
             this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117), utilConf.GetOrDefault<int>("maxoutbound",8));            
@@ -63,8 +63,9 @@ namespace Xerxes.P2P
         private async void ClientConnectedAsync(IPEndPoint address)
         {
             try
-            {   
-                await receiver.Send(message:"0", to:address);  
+            {
+                NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Seek };
+                await receiver.Send(sender, to:address);  
                 Console.WriteLine("From the receiver: Peer Connected, Awaiting Message");
             }
             catch (Exception e)
@@ -73,12 +74,14 @@ namespace Xerxes.P2P
             }
         }
 
-        private async void ServerMessageReceivedAsync(IPEndPoint sender, string message)
+        private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
         {
-            Console.WriteLine($"{sender}: {message}");
-            if(message.Equals("0")){
-                await receiver.Send("1", sender);
-                NetworkPeer networkPeers = new NetworkPeer(sender);
+            Console.WriteLine($"{message.MessageSenderPort}:{message.MessageSenderPort}");
+            if(message.MessageStateType == MessageType.Seek){
+                NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Created };
+                //IPEndPoint sndTo = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
+                await receiver.Send(sender, sndrIp);
+                NetworkPeer networkPeers = new NetworkPeer(sndrIp);
                 var result = this.Peers.AddInboundPeer(networkPeers);
                 //UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
                 Console.WriteLine("From the receiver: Handshake Sent");

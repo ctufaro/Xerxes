@@ -8,14 +8,14 @@ using ZeroFormatter;
 namespace Xerxes.P2P
 {
     [ZeroFormattable]
-    public struct NetworkMessage
+    public class NetworkMessage
     {        
         [Index(0)]
-        public string MessageSenderIP{get;set;}
+        public virtual string MessageSenderIP {get;set;}
         [Index(1)]
-        public int MessageSenderPort{get;set;}
+        public virtual int MessageSenderPort {get;set;}
         [Index(2)]
-        public int MessageStateType{get;set;}
+        public virtual MessageType MessageStateType {get;set;}
     }        
         
 

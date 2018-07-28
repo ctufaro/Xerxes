@@ -13,7 +13,7 @@ namespace Xerxes.P2P
 {
     public class NetworkSeeker
     {
-        private ProtoClient<string> seeker; 
+        private ProtoClient<NetworkMessage> seeker; 
         
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
@@ -68,7 +68,7 @@ namespace Xerxes.P2P
                     });
                 }
             }
-            catch { }
+            catch(Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
         private async Task AttemptToConnectAsync(int delay, CancellationTokenSource seekRst)
@@ -92,17 +92,22 @@ namespace Xerxes.P2P
             foreach (var endPoint in this.foundEndPoints)
             {
                 IPEndPoint myLocalEnd = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
-                this.seeker = new ProtoClient<string>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
+                this.seeker = new ProtoClient<NetworkMessage>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
                 this.seeker.ReceivedMessage += ClientMessageReceived;
                 await this.seeker.Connect(true);
                 Console.WriteLine("From the seeker: Connecting to " + endPoint.ToString());
-                await this.seeker.Send("0");                
+                NetworkMessage sndMessage = new NetworkMessage { MessageSenderIP = endPoint.Address.ToString(), MessageSenderPort = endPoint.Port, MessageStateType = MessageType.Seek };
+                try
+                {
+                    await this.seeker.Send(sndMessage);
+                }
+                catch { Console.WriteLine("Socket not responding"); }
             }            
         }               
 
-        private void ClientMessageReceived(IPEndPoint sender, string message)
+        private void ClientMessageReceived(IPEndPoint sender, NetworkMessage message)
         {
-            Console.WriteLine($"All is good! {sender}: {message}");
+            Console.WriteLine($"All is good! {message.MessageSenderIP}:{message.MessageSenderPort} {message.MessageStateType}");
         }             
 
     }
