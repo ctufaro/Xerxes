@@ -31,14 +31,14 @@ namespace Xerxes.P2P
         private NetworkPeers Peers;
         /// <summary>Task accepting new clients in a loop.</summary>
        
-        public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf)
+        public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
         {
             this.utilConf = utilConf;
             this.LocalEndpoint = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
             this.receiver = new ProtoServer<NetworkMessage>(this.LocalEndpoint.Address, this.LocalEndpoint.Port);
             this.serverCancel = new CancellationTokenSource();
-            this.networkConfiguration = netConfig;                        
-            this.Peers = new NetworkPeers(utilConf.GetOrDefault<int>("maxinbound",117), utilConf.GetOrDefault<int>("maxoutbound",8));            
+            this.networkConfiguration = netConfig;
+            this.Peers = peers;
         }
 
         public async Task ReceivePeersAsync()    
@@ -81,6 +81,7 @@ namespace Xerxes.P2P
                 NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Created };
                 //IPEndPoint sndTo = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
                 await receiver.Send(sender, sndrIp);
+                sndrIp = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
                 NetworkPeer networkPeers = new NetworkPeer(sndrIp);
                 var result = this.Peers.AddInboundPeer(networkPeers);
                 //UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");

@@ -33,17 +33,18 @@ namespace Xerxes.Driver
             INetworkConfiguration networkConfiguration = new NetworkConfiguration();
             UtilitiesConsole UCon = UtilitiesConsole.Instance;
             networkConfiguration.Turf = (Turf)options.Turf.Value;
-            networkConfiguration.ReceivePort = options.ReceivePort.Value;           
-                        
-            if(options.Receive.Value)
+            networkConfiguration.ReceivePort = options.ReceivePort.Value;
+            NetworkPeers peers = new NetworkPeers(utilConfiguration.GetOrDefault<int>("maxinbound", 117), utilConfiguration.GetOrDefault<int>("maxoutbound", 8));
+
+            if (options.Receive.Value)
             {
-                NetworkReceiver networkReceiver = new NetworkReceiver(networkConfiguration, utilConfiguration); 
+                NetworkReceiver networkReceiver = new NetworkReceiver(networkConfiguration, utilConfiguration, ref peers); 
                 Task.Run(()=> networkReceiver.ReceivePeersAsync());
             }            
 
             if(options.Seek.Value)
             {
-                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration);
+                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration, ref peers);
                 Task.Run(()=> networkSeeker.SeekPeersAsync());
             }
 

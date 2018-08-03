@@ -26,18 +26,18 @@ namespace Xerxes.P2P
 
         private List<IPEndPoint> foundEndPoints;
 
-        private NetworkPeers peers;
+        private NetworkPeers Peers;
 
         private NetworkDiscovery networkDiscovery;
 
-        public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf)
+        public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
         {
             this.serverCancel = new CancellationTokenSource();
             this.seekReset = new CancellationTokenSource();
             this.netConfig = networkConfiguration;
             this.utilConf = utilConf;
             this.foundEndPoints = new List<IPEndPoint>();
-            this.peers = new NetworkPeers();
+            this.Peers = peers;
             this.networkDiscovery = new NetworkDiscovery(this.netConfig, this.foundEndPoints, this.utilConf);            
         }
 
@@ -62,7 +62,7 @@ namespace Xerxes.P2P
                             //Peers populated, let's attempt to connect
                             await AttemptToConnectAsync(delay,this.seekReset);
                             
-                            this.peers.Clear();
+                            this.Peers.Clear();
                         }
                         this.seekReset = new CancellationTokenSource();                        
                     });
@@ -86,6 +86,10 @@ namespace Xerxes.P2P
 
         private async Task ConnectToPeersAsync()
         {
+            foreach (var p in this.Peers.peers)
+            {
+                this.foundEndPoints.Add(p.Value.IPEnd);
+            }
             //UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
             Console.WriteLine("From the seeker: Peers to Connect to {0}", this.foundEndPoints.Count);
             Thread.Sleep(5000);
@@ -96,7 +100,7 @@ namespace Xerxes.P2P
                 this.seeker.ReceivedMessage += ClientMessageReceived;
                 await this.seeker.Connect(true);
                 Console.WriteLine("From the seeker: Connecting to " + endPoint.ToString());
-                NetworkMessage sndMessage = new NetworkMessage { MessageSenderIP = endPoint.Address.ToString(), MessageSenderPort = endPoint.Port, MessageStateType = MessageType.Seek };
+                NetworkMessage sndMessage = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = netConfig.ReceivePort, MessageStateType = MessageType.Seek };
                 try
                 {
                     await this.seeker.Send(sndMessage);
