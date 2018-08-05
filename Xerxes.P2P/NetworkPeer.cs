@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Xerxes.Utils;
 
 namespace Xerxes.P2P
 {    
@@ -34,20 +36,13 @@ namespace Xerxes.P2P
 
     public class NetworkPeers
     {
-        public ConcurrentDictionary<string, NetworkPeer> peers;
-        public int maxinbound{get;set;}
-        public int maxoutbound{get;set;}
+        private ConcurrentDictionary<string, NetworkPeer> peers;
+        private int maxinbound{get;set;}
+        private int maxoutbound{get;set;}
 
-        public int Count
+        public int GetPeerCount(IPEndPoint owner)
         {
-            get
-            {
-                return this.peers.Count;
-            }
-        }
-        public NetworkPeers()
-        {
-            this.peers = new ConcurrentDictionary<string, NetworkPeer>();
+            return (this.peers.ContainsKey(owner.ToString())) ? this.peers.Count - 1 : this.peers.Count;
         }
 
         public NetworkPeers(int maxinbound, int maxoutbound)
@@ -57,11 +52,7 @@ namespace Xerxes.P2P
             this.maxoutbound = maxoutbound;
         }        
 
-        public void AddPeer(NetworkPeer toBeAdded)
-        {
-            bool unique = this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
-        }
-
+  
         public void Clear()
         {
             this.peers.Clear();
@@ -85,12 +76,56 @@ namespace Xerxes.P2P
 
         public NetworkPeerMessage AddOutboundPeer(NetworkPeer toBeAdded)
         {
-            bool result =  this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
-            if(result)
-                return NetworkPeerMessage.Success;
+            if (this.peers.Count < maxoutbound)
+            {
+                bool result = this.peers.TryAdd(toBeAdded.IPEnd.ToString(), toBeAdded);
+                if (result)
+                    return NetworkPeerMessage.Success;
+                else
+                    return NetworkPeerMessage.AlreadyExists;
+            }
             else
-                return NetworkPeerMessage.AlreadyExists;
+            {
+                return NetworkPeerMessage.MaximumConnectionsReached;
+            }
         }                      
+
+        public List<NetworkPeer> GetPeers()
+        {
+            return this.peers.Values.ToList();
+        }
+
+        public void CombinePeers(string[] knownPeers)
+        {
+            if(knownPeers.Length > 0)
+            {
+                foreach (string kp in knownPeers)
+                {
+                    try
+                    {
+                        IPEndPoint converted = UtilitiesNetwork.CreateIPEndPoint(kp);
+                        try
+                        {
+                            NetworkPeerMessage res = AddOutboundPeer(new NetworkPeer(converted));
+                        }
+                        catch (Exception e)
+                        {
+                            throw e;
+                        }
+
+                    }
+                    catch
+                    {
+                        Console.WriteLine("ERROR While Combining Peers");
+                    }
+                }
+            }            
+        }
+
+        public string[] ConvertPeersToStringArray()
+        {
+            return this.peers.Keys.ToArray();    
+        }
 
         public override string ToString()
         {

@@ -20,14 +20,14 @@ namespace Xerxes.P2P
     {
         private INetworkConfiguration networkConf;
         private UtilitiesConfiguration utilConf;
-        private List<IPEndPoint> endPoints;
+        private NetworkPeers outBoundPeers;
         private IPEndPoint self;
 
-        public NetworkDiscovery(INetworkConfiguration networkConfiguration, List<IPEndPoint> endPoints, UtilitiesConfiguration utilConf)
+        public NetworkDiscovery(INetworkConfiguration networkConfiguration, NetworkPeers outBoundPeers, UtilitiesConfiguration utilConf)
         {
             this.networkConf = networkConfiguration;
             this.utilConf = utilConf;
-            this.endPoints = endPoints;
+            this.outBoundPeers = outBoundPeers;
             this.self = GetEndPoint(networkConf.Turf, utilConf, networkConf.ReceivePort);
         }
 
@@ -84,7 +84,7 @@ namespace Xerxes.P2P
                 foreach(IPEndPoint iEP in toBeMerged)
                 {
                     if(iEP.Equals(self)) continue;
-                    this.endPoints.Add(iEP);
+                    this.outBoundPeers.AddOutboundPeer(new NetworkPeer(iEP));                    
                 }
             }
         }
@@ -98,7 +98,7 @@ namespace Xerxes.P2P
                 {
                     IPEndPoint iEP = new IPEndPoint(iAD, port);
                     if(iEP.Equals(self)) continue;
-                    this.endPoints.Add(iEP);
+                    this.outBoundPeers.AddOutboundPeer(new NetworkPeer(iEP));
                 }
             }
         }

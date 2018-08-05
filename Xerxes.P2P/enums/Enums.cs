@@ -19,6 +19,8 @@ namespace Xerxes.P2P
         Connected,
         /// <summary>The node and the peer exchanged version information.</summary>
         HandShaked,
+        /// <summary>Share Peers List.</summary>
+        Share,
         /// <summary>Process of disconnecting the peer has been initiated.</summary>
         Disconnecting,
         /// <summary>Shutdown has been initiated, the node went offline.</summary>

@@ -16,6 +16,8 @@ namespace Xerxes.P2P
         public virtual int MessageSenderPort {get;set;}
         [Index(2)]
         public virtual MessageType MessageStateType {get;set;}
+        [Index(3)]
+        public virtual string[] KnownPeers { get; set; }
     }        
         
 

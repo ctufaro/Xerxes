@@ -24,21 +24,22 @@ namespace Xerxes.P2P
 
         private UtilitiesConfiguration utilConf;
 
-        private List<IPEndPoint> foundEndPoints;
-
         private NetworkPeers Peers;
 
         private NetworkDiscovery networkDiscovery;
+
+        /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
+        public IPEndPoint LocalEndpoint { get; private set; }
 
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
         {
             this.serverCancel = new CancellationTokenSource();
             this.seekReset = new CancellationTokenSource();
+            this.LocalEndpoint = NetworkDiscovery.GetEndPoint(networkConfiguration.Turf, utilConf, networkConfiguration.ReceivePort);
             this.netConfig = networkConfiguration;
             this.utilConf = utilConf;
-            this.foundEndPoints = new List<IPEndPoint>();
             this.Peers = peers;
-            this.networkDiscovery = new NetworkDiscovery(this.netConfig, this.foundEndPoints, this.utilConf);            
+            this.networkDiscovery = new NetworkDiscovery(this.netConfig, peers, this.utilConf);            
         }
 
         public async void SeekPeersAsync()
@@ -86,21 +87,25 @@ namespace Xerxes.P2P
 
         private async Task ConnectToPeersAsync()
         {
-            foreach (var p in this.Peers.peers)
-            {
-                this.foundEndPoints.Add(p.Value.IPEnd);
-            }
             //UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
-            Console.WriteLine("From the seeker: Peers to Connect to {0}", this.foundEndPoints.Count);
+            var peersToSeek = this.Peers.GetPeers();
+            Console.WriteLine("From the seeker: Peers to Connect to {0}", this.Peers.GetPeerCount(LocalEndpoint));
             Thread.Sleep(5000);
-            foreach (var endPoint in this.foundEndPoints)
+            foreach (var ePnt in peersToSeek)
             {
+                IPEndPoint endPoint = ePnt.IPEnd;
                 IPEndPoint myLocalEnd = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
                 this.seeker = new ProtoClient<NetworkMessage>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
                 this.seeker.ReceivedMessage += ClientMessageReceived;
                 await this.seeker.Connect(true);
                 Console.WriteLine("From the seeker: Connecting to " + endPoint.ToString());
-                NetworkMessage sndMessage = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = netConfig.ReceivePort, MessageStateType = MessageType.Seek };
+                NetworkMessage sndMessage = new NetworkMessage
+                {
+                    MessageSenderIP = IPAddress.Loopback.ToString(),
+                    MessageSenderPort = netConfig.ReceivePort,
+                    MessageStateType = MessageType.Seek,
+                    KnownPeers = this.Peers.ConvertPeersToStringArray()
+                };
                 try
                 {
                     await this.seeker.Send(sndMessage);

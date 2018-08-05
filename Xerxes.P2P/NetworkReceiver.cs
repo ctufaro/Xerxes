@@ -77,7 +77,8 @@ namespace Xerxes.P2P
         private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
         {
             Console.WriteLine($"{message.MessageSenderPort}:{message.MessageSenderPort}");
-            if(message.MessageStateType == MessageType.Seek){
+            if (message.MessageStateType == MessageType.Seek)
+            {
                 NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Created };
                 //IPEndPoint sndTo = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
                 await receiver.Send(sender, sndrIp);
@@ -86,11 +87,12 @@ namespace Xerxes.P2P
                 var result = this.Peers.AddInboundPeer(networkPeers);
                 //UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
                 Console.WriteLine("From the receiver: Handshake Sent");
-                //UtilitiesConsole.Update(UCommand.InBoundPeers, this.Peers.Count.ToString());
-                Console.WriteLine("From the receiver: Peer Count {0}", this.Peers.Count.ToString());
-            }
-                
+                Console.WriteLine("From the receiver: Combining Lists");
+                this.Peers.CombinePeers(message.KnownPeers);
+                Console.WriteLine("From the receiver: Peer Count {0}", this.Peers.GetPeerCount(LocalEndpoint).ToString());
+            }            
+
         }
-  
+
     }
 }
