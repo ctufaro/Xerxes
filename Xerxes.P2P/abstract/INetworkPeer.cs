@@ -9,6 +9,5 @@ namespace Xerxes.P2P
     {
         IPEndPoint IPEnd{ get;set;}
         string Id {get;set;}
-        TcpClient TCPClient {get;set;}
     } 
 }

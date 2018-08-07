@@ -14,7 +14,7 @@ namespace Xerxes.P2P
         /// <summary>Seeking peers.</summary>
         Seek = 0,
         /// <summary>Initial state of an outbound peer.</summary>
-        Created,
+        Accepting,
         /// <summary>Network connection with the peer has been established.</summary>
         Connected,
         /// <summary>The node and the peer exchanged version information.</summary>
@@ -26,6 +26,10 @@ namespace Xerxes.P2P
         /// <summary>Shutdown has been initiated, the node went offline.</summary>
         Offline,
         /// <summary>An error occurred during a network operation.</summary>
-        Failed
+        Failed,
+        /// <summary>Gab</summary>
+        Gab,
+        /// <summary> Not Accepting Connections</summary>
+        NotAccepting
     }  
 }

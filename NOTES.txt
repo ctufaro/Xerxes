@@ -10,4 +10,7 @@ ex: dotnet publish ./Xerxes.Driver/Xerxes.Driver.csproj -c Release -r win-x64 -o
 ex: dotnet run --project ./Xerxes.Driver/Xerxes.Driver.csproj -r true -v 1000 -s true -t 1
 
 0. seed nodes startup, start receiving connections
-1. users connect to seed nodes
+1. users attempt to connect servers via seed nodes
+2. receivers accept and send a seek message along with their IP and Port
+3. clients then sends another seek
+4. receiver 

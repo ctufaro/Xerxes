@@ -47,9 +47,8 @@ namespace Xerxes.P2P
             {
                 await Task.Run(() =>
                 {                    
-                    receiver.Start();
-                    //UtilitiesConsole.Update(UCommand.StatusInbound, "Server started on " + this.LocalEndpoint.ToString());
-                    Console.WriteLine("From the receiver: Server started on " + this.LocalEndpoint.ToString());
+                    receiver.Start();                    
+                    Console.WriteLine("Receiver: Server started on " + this.LocalEndpoint.ToString());
                     receiver.ClientConnected += ClientConnectedAsync;
                     receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
@@ -60,38 +59,58 @@ namespace Xerxes.P2P
             }
         }
 
+        ///<summary>
+        ///Clients initally connecting after their Discovery, lets send them a message
+        ///if the server has not reached maximum inbound connections - send Accepting
+        ///if the server has reached maximum connections - send NotAccepting
+        ///if there was an error - send Failed
+        //</summary>
         private async void ClientConnectedAsync(IPEndPoint address)
         {
+            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort};
+
             try
             {
-                NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Seek };
-                await receiver.Send(sender, to:address);  
-                Console.WriteLine("From the receiver: Peer Connected, Awaiting Message");
+                if(this.Peers.GetPeerCount(LocalEndpoint) < this.Peers.MaxInBound)
+                {
+                    sender.MessageStateType = MessageType.Accepting;           
+                }
+                else
+                {
+                   sender.MessageStateType = MessageType.NotAccepting;
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                sender.MessageStateType = MessageType.Failed;
+                Console.WriteLine(e.ToString());                
             }
+
+            await receiver.Send(sender, address);
         }
 
         private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
-        {
-            Console.WriteLine($"{message.MessageSenderPort}:{message.MessageSenderPort}");
-            if (message.MessageStateType == MessageType.Seek)
-            {
-                NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, MessageStateType = MessageType.Created };
-                //IPEndPoint sndTo = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
-                await receiver.Send(sender, sndrIp);
-                sndrIp = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
-                NetworkPeer networkPeers = new NetworkPeer(sndrIp);
-                var result = this.Peers.AddInboundPeer(networkPeers);
-                //UtilitiesConsole.Update(UCommand.StatusInbound, "Handshake Sent");
-                Console.WriteLine("From the receiver: Handshake Sent");
-                Console.WriteLine("From the receiver: Combining Lists");
-                this.Peers.CombinePeers(message.KnownPeers);
-                Console.WriteLine("From the receiver: Peer Count {0}", this.Peers.GetPeerCount(LocalEndpoint).ToString());
-            }            
+        {            
+            Console.WriteLine("Receiver: message ({0}) received", message.MessageStateType.ToString());
+            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort};
 
+            if (message.MessageStateType == MessageType.Connected)
+            {   
+                sender.MessageStateType = MessageType.Gab;                
+                NetworkPeer networkPeers = new NetworkPeer(new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort));
+                var result = this.Peers.AddInboundPeer(networkPeers);
+                this.Peers.CombinePeers(message.KnownPeers);               
+                await receiver.Send(sender, sndrIp);
+            }
+
+            if (message.MessageStateType == MessageType.Gab)
+            {
+                sender.MessageStateType = MessageType.Gab;
+                await receiver.Send(sender, sndrIp);
+            }
+
+            Console.WriteLine("Receiver: message ({0}) sent", sender.MessageStateType.ToString());           
+            
         }
 
     }

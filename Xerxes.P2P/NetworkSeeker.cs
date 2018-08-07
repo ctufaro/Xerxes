@@ -13,7 +13,7 @@ namespace Xerxes.P2P
 {
     public class NetworkSeeker
     {
-        private ProtoClient<NetworkMessage> seeker; 
+        //private ProtoClient<NetworkMessage> seeker; 
         
         /// <summary>Cancellation that is triggered on shutdown to stop all pending operations.</summary>
         private readonly CancellationTokenSource serverCancel;
@@ -31,6 +31,8 @@ namespace Xerxes.P2P
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
 
+        private ConcurrentDictionary<string,ProtoClient<NetworkMessage>> PeerConnections;
+
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
         {
             this.serverCancel = new CancellationTokenSource();
@@ -39,6 +41,7 @@ namespace Xerxes.P2P
             this.netConfig = networkConfiguration;
             this.utilConf = utilConf;
             this.Peers = peers;
+            this.PeerConnections = new ConcurrentDictionary<string, ProtoClient<NetworkMessage>>();
             this.networkDiscovery = new NetworkDiscovery(this.netConfig, peers, this.utilConf);            
         }
 
@@ -51,23 +54,24 @@ namespace Xerxes.P2P
                 Console.WriteLine("From the seeker: Seeking Peers");
                 Thread.Sleep(1000);
                 
-                while (!this.serverCancel.IsCancellationRequested)
-                {                   
-                    await Task.Run(async () =>
-                    {                        
-                        while (!this.seekReset.IsCancellationRequested)
-                        {
+                //while (!this.serverCancel.IsCancellationRequested)
+                //{                   
+                    //await Task.Run(async () =>
+                    //{                        
+                        //while (!this.seekReset.IsCancellationRequested)
+                        //{
                             //Peer discovery begins
                             await networkDiscovery.DiscoverPeersAsync();
 
-                            //Peers populated, let's attempt to connect
-                            await AttemptToConnectAsync(delay,this.seekReset);
+                            //Peers populated, let's connect
+                            await ConnectAndSaveToPeersAsync();
                             
-                            this.Peers.Clear();
-                        }
-                        this.seekReset = new CancellationTokenSource();                        
-                    });
-                }
+                            //this.Peers.Clear();
+                            await GibGab(this.seekReset);
+                        //}
+                        //this.seekReset = new CancellationTokenSource();                        
+                    //});
+                //}
             }
             catch(Exception ex) { Console.WriteLine(ex.ToString()); }
         }
@@ -79,44 +83,88 @@ namespace Xerxes.P2P
                 seekRst.CancelAfter(delay);
                 while(!seekRst.IsCancellationRequested)
                 {                    
-                    await ConnectToPeersAsync();                    
+                    await ConnectAndSaveToPeersAsync();                    
                     Thread.Sleep(1000);
                 }
             });
         }
 
-        private async Task ConnectToPeersAsync()
-        {
-            //UtilitiesConsole.Update(UCommand.StatusOutbound, "Peers to Connect to: " + this.foundEndPoints.Count);
-            var peersToSeek = this.Peers.GetPeers();
-            Console.WriteLine("From the seeker: Peers to Connect to {0}", this.Peers.GetPeerCount(LocalEndpoint));
-            Thread.Sleep(5000);
-            foreach (var ePnt in peersToSeek)
+        private async Task GibGab(CancellationTokenSource seekRst)
+        {                          
+            await Task.Run(async () =>
             {
-                IPEndPoint endPoint = ePnt.IPEnd;
-                IPEndPoint myLocalEnd = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
-                this.seeker = new ProtoClient<NetworkMessage>(endPoint.Address, endPoint.Port) { AutoReconnect = true };
-                this.seeker.ReceivedMessage += ClientMessageReceived;
-                await this.seeker.Connect(true);
-                Console.WriteLine("From the seeker: Connecting to " + endPoint.ToString());
-                NetworkMessage sndMessage = new NetworkMessage
+                Console.WriteLine("Seeker: starting GibGab");
+                while(!seekRst.IsCancellationRequested)
                 {
-                    MessageSenderIP = IPAddress.Loopback.ToString(),
-                    MessageSenderPort = netConfig.ReceivePort,
-                    MessageStateType = MessageType.Seek,
-                    KnownPeers = this.Peers.ConvertPeersToStringArray()
-                };
-                try
-                {
-                    await this.seeker.Send(sndMessage);
+                    foreach(var c in this.PeerConnections)
+                    {   
+                        NetworkMessage nm = GetLocalMessage(MessageType.Gab);
+                        if(c.Value.ConnectionStatus == ConnectionStatus.Connected)
+                        {                                                
+                            await c.Value.Send(nm);
+                        }                                        
+                        Thread.Sleep(1000);
+                    }
                 }
-                catch { Console.WriteLine("Socket not responding"); }
-            }            
+            });
+        }        
+
+
+        ///<summary>Method takes Peers that were discovered and actually connects to them</summary>        
+        private async Task ConnectAndSaveToPeersAsync()
+        {            
+            ProtoClient<NetworkMessage> client;
+            var peers = this.Peers.GetPeers();
+            //Console.WriteLine("Peer count: {0}", peers.Count);
+            foreach (var ePnt in peers)
+            {
+                if(ePnt.IsConnected) continue;
+                IPEndPoint endPoint = ePnt.IPEnd;                
+                client = new ProtoClient<NetworkMessage>(endPoint.Address, endPoint.Port) { AutoReconnect = false };
+                client.ReceivedMessage += ClientMessageReceivedAsync;                
+                this.PeerConnections.TryAdd(endPoint.ToString(),client);
+                await client.Connect(true);
+                break;
+            }
+            
         }               
 
-        private void ClientMessageReceived(IPEndPoint sender, NetworkMessage message)
+        private void ClientMessageReceivedAsync(IPEndPoint sender, NetworkMessage message)
         {
-            Console.WriteLine($"All is good! {message.MessageSenderIP}:{message.MessageSenderPort} {message.MessageStateType}");
+            try
+            {
+                Console.WriteLine("Seeker: message ({0}) received", message.MessageStateType.ToString());                
+                IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort);
+                if(this.PeerConnections.ContainsKey(endPoint.ToString()))
+                {
+                    ProtoClient<NetworkMessage> client = this.PeerConnections[endPoint.ToString()];
+                    if(message.MessageStateType == MessageType.Accepting)
+                    {
+                        this.Peers.UpdatePeerConnection(endPoint.ToString(), client);
+                        NetworkMessage sndMessage = new NetworkMessage {MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = netConfig.ReceivePort, MessageStateType = MessageType.Connected, KnownPeers = this.Peers.ConvertPeersToStringArray()};
+                        try
+                        {                        
+                            client.Send(sndMessage);                        
+                        }
+                        catch(Exception e) 
+                        { 
+                            Console.WriteLine("Seeker: Socket not responding ({0})", e.ToString()); 
+                        }
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        private NetworkMessage GetLocalMessage(MessageType msg)
+        {
+            return new NetworkMessage {MessageSenderIP = IPAddress.Loopback.ToString(), 
+            MessageSenderPort = netConfig.ReceivePort, 
+            MessageStateType = msg,
+            KnownPeers = new string[]{""}};
         }             
 
     }

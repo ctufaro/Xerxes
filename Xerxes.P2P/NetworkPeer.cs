@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using GenericProtocol.Implementation;
 using Xerxes.Utils;
 
 namespace Xerxes.P2P
@@ -14,18 +15,13 @@ namespace Xerxes.P2P
     {
         public IPEndPoint IPEnd{ get;set;}
         public string Id {get;set;}
-        public TcpClient TCPClient { get;set; }
+        public ProtoClient<NetworkMessage> ProtoClient {get;set;}
         public bool IsConnected {get;set;}
 
         public NetworkPeer(IPEndPoint ipEnd)
         {
             this.IPEnd = ipEnd;
-        }
-
-        public async void SendMessage(string response, NetworkStream receiver)
-        {
-            byte[] serverResponseBytes = Encoding.UTF8.GetBytes(response);
-            await receiver.WriteAsync(serverResponseBytes, 0, serverResponseBytes.Length);
+            this.IsConnected = false;
         }
 
         public override string ToString()
@@ -37,8 +33,8 @@ namespace Xerxes.P2P
     public class NetworkPeers
     {
         private ConcurrentDictionary<string, NetworkPeer> peers;
-        private int maxinbound{get;set;}
-        private int maxoutbound{get;set;}
+        public int MaxInBound{get;}
+        public int MaxOutBound{get;}
 
         public int GetPeerCount(IPEndPoint owner)
         {
@@ -48,8 +44,8 @@ namespace Xerxes.P2P
         public NetworkPeers(int maxinbound, int maxoutbound)
         {
             this.peers = new ConcurrentDictionary<string, NetworkPeer>();
-            this.maxinbound = maxinbound;
-            this.maxoutbound = maxoutbound;
+            this.MaxInBound = maxinbound;
+            this.MaxOutBound = maxoutbound;
         }        
 
   
@@ -60,7 +56,7 @@ namespace Xerxes.P2P
 
         public NetworkPeerMessage AddInboundPeer(NetworkPeer toBeAdded)
         {
-            if(this.peers.Count < maxinbound)
+            if(this.peers.Count < MaxInBound)
             {
                 bool result =  this.peers.TryAdd(toBeAdded.IPEnd.ToString(),toBeAdded);
                 if(result)
@@ -73,10 +69,9 @@ namespace Xerxes.P2P
                 return NetworkPeerMessage.MaximumConnectionsReached;
             }
         }
-
         public NetworkPeerMessage AddOutboundPeer(NetworkPeer toBeAdded)
         {
-            if (this.peers.Count < maxoutbound)
+            if (this.peers.Count < MaxOutBound)
             {
                 bool result = this.peers.TryAdd(toBeAdded.IPEnd.ToString(), toBeAdded);
                 if (result)
@@ -93,6 +88,13 @@ namespace Xerxes.P2P
         public List<NetworkPeer> GetPeers()
         {
             return this.peers.Values.ToList();
+        }
+
+        public void UpdatePeerConnection(string peerId, ProtoClient<NetworkMessage> proto)
+        {
+            NetworkPeer peer = this.peers[peerId];
+            peer.ProtoClient = proto;
+            peer.IsConnected = true;
         }
 
         public void CombinePeers(string[] knownPeers)
@@ -151,6 +153,7 @@ namespace Xerxes.P2P
     {
         Success=0,
         AlreadyExists,
-        MaximumConnectionsReached
+        MaximumConnectionsReached,
+        Error
     }
 }
