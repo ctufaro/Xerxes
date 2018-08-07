@@ -123,8 +123,7 @@ namespace Xerxes.P2P
                 client = new ProtoClient<NetworkMessage>(endPoint.Address, endPoint.Port) { AutoReconnect = false };
                 client.ReceivedMessage += ClientMessageReceivedAsync;                
                 this.PeerConnections.TryAdd(endPoint.ToString(),client);
-                await client.Connect(true);
-                break;
+                await client.Connect();
             }
             
         }               
