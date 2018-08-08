@@ -15,7 +15,7 @@ namespace Xerxes.Driver
     class Program
     {
         static void Main(string[] args)
-        {
+        {     
             if (Debugger.IsAttached)
             {
                 Start(new Options { Receive = true, ReceivePort = 1000, Seek = true, Turf = 1 });
@@ -43,7 +43,7 @@ namespace Xerxes.Driver
             }            
 
             if(options.Seek.Value)
-            {
+            {                
                 NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration, ref peers);
                 Task.Run(()=> networkSeeker.SeekPeersAsync());
             }

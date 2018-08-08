@@ -30,6 +30,7 @@ namespace Xerxes.P2P
         /// <summary>Gab</summary>
         Gab,
         /// <summary> Not Accepting Connections</summary>
-        NotAccepting
+        NotAccepting,
+        TurnRed
     }  
 }

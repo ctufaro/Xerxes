@@ -71,7 +71,7 @@ namespace Xerxes.P2P
 
             try
             {
-                if(this.Peers.GetPeerCount(LocalEndpoint) < this.Peers.MaxInBound)
+                if(this.Peers.GetPeerCount() < this.Peers.MaxInBound)
                 {
                     sender.MessageStateType = MessageType.Accepting;           
                 }
@@ -92,7 +92,7 @@ namespace Xerxes.P2P
         private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
         {            
             Console.WriteLine("Receiver: message ({0}) received", message.MessageStateType.ToString());
-            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort};
+            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, KnownPeers = this.Peers.ConvertPeersToStringArray()};
 
             if (message.MessageStateType == MessageType.Connected)
             {   

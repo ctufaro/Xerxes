@@ -36,9 +36,9 @@ namespace Xerxes.P2P
         public int MaxInBound{get;}
         public int MaxOutBound{get;}
 
-        public int GetPeerCount(IPEndPoint owner)
+        public int GetPeerCount()
         {
-            return (this.peers.ContainsKey(owner.ToString())) ? this.peers.Count - 1 : this.peers.Count;
+            return this.peers.Count;
         }
 
         public NetworkPeers(int maxinbound, int maxoutbound)
@@ -88,6 +88,11 @@ namespace Xerxes.P2P
         public List<NetworkPeer> GetPeers()
         {
             return this.peers.Values.ToList();
+        }
+
+        public NetworkPeer GetPeer(string ipEndPoint)
+        {
+            return this.peers[ipEndPoint];
         }
 
         public void UpdatePeerConnection(string peerId, ProtoClient<NetworkMessage> proto)
