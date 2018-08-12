@@ -47,15 +47,15 @@ namespace Xerxes.P2P
             {
                 await Task.Run(() =>
                 {                    
-                    receiver.Start();                    
-                    Console.WriteLine("Receiver: Server started on " + this.LocalEndpoint.ToString());
+                    receiver.Start();
+                    UtilitiesLogger.WriteLine("Receiver: Server started on " + this.LocalEndpoint.ToString(), LoggerType.Info);
                     receiver.ClientConnected += ClientConnectedAsync;
                     receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                UtilitiesLogger.WriteLine(e.ToString(), LoggerType.Error);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Xerxes.P2P
         //</summary>
         private async void ClientConnectedAsync(IPEndPoint address)
         {
-            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort};
+            NetworkMessage sender = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = networkConfiguration.ReceivePort};
 
             try
             {
@@ -83,16 +83,16 @@ namespace Xerxes.P2P
             catch (Exception e)
             {
                 sender.MessageStateType = MessageType.Failed;
-                Console.WriteLine(e.ToString());                
+                UtilitiesLogger.WriteLine(e.ToString(), LoggerType.Error);                
             }
 
             await receiver.Send(sender, address);
         }
 
         private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
-        {            
-            Console.WriteLine("Receiver: message ({0}) received", message.MessageStateType.ToString());
-            NetworkMessage sender = new NetworkMessage { MessageSenderIP = IPAddress.Loopback.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, KnownPeers = this.Peers.ConvertPeersToStringArray()};
+        {
+            UtilitiesLogger.WriteLine(string.Format("Receiver: message ({0}) received", message.MessageStateType.ToString()), LoggerType.Debug);
+            NetworkMessage sender = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, KnownPeers = this.Peers.ConvertPeersToStringArray()};
 
             if (message.MessageStateType == MessageType.Connected)
             {   
@@ -109,7 +109,7 @@ namespace Xerxes.P2P
                 await receiver.Send(sender, sndrIp);
             }
 
-            Console.WriteLine("Receiver: message ({0}) sent", sender.MessageStateType.ToString());           
+            UtilitiesLogger.WriteLine(string.Format("Receiver: message ({0}) sent", sender.MessageStateType.ToString()), LoggerType.Debug);           
             
         }
 

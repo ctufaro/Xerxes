@@ -36,7 +36,6 @@ namespace Xerxes.Utils
                         while (reader.Read())
                         {
                             var message = reader.GetString(0);
-                            //Console.WriteLine(message);
                         }
                     }
 

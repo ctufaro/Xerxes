@@ -49,16 +49,16 @@ namespace Xerxes.P2P
             try
             {
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin", 86400000);
-                Console.WriteLine("Seeker: Seeking Peers");
+                UtilitiesLogger.WriteLine("Seeker: Seeking Peers", LoggerType.Debug);
                 await networkDiscovery.DiscoverPeersAsync();
-                Console.WriteLine("Seeker: {0} Peers Discovered, attempting to connect", this.Peers.GetPeerCount());
+                UtilitiesLogger.WriteLine(string.Format("Seeker: {0} Peers Discovered, attempting to connect", this.Peers.GetPeerCount()), LoggerType.Debug);
                 while (!this.serverCancel.IsCancellationRequested)
                 { 
                     await ConnectToPeers();
                     Thread.Sleep(1000);
                 }
             }
-            catch(Exception ex) { Console.WriteLine(ex.ToString()); }
+            catch(Exception ex) { UtilitiesLogger.WriteLine(ex.ToString(), LoggerType.Error); }
         }
 
         private async Task ConnectToPeers()
@@ -66,15 +66,15 @@ namespace Xerxes.P2P
             //iterate through the peers discovered
             foreach(NetworkPeer p in this.Peers.GetPeers())
             {
-                //lets try to connect
-                if (!p.IsConnected)
+                //lets try to connect and save the socket (not ours)
+                if (!p.IsConnected && p.IPEnd.Port != this.netConfig.ReceivePort)
                 {
                     try
                     {
                         //lets create a new socket for each peer and save it
                         ProtoClient<NetworkMessage> protoClient = new ProtoClient<NetworkMessage>(p.IPEnd.Address, p.IPEnd.Port);
                         p.ProtoClient = protoClient;
-                        Console.WriteLine("Seeker: created a new socket for {0}", p.IPEnd.ToString());
+                        UtilitiesLogger.WriteLine(string.Format("Seeker: created a new socket for {0}", p.IPEnd.ToString()), LoggerType.Info);
                         protoClient.ReceivedMessage += ClientReceivedMessage;
                         await p.ProtoClient.Connect(true);
                         if(p.ProtoClient.ConnectionStatus == ConnectionStatus.Connected)

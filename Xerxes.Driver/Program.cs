@@ -31,7 +31,7 @@ namespace Xerxes.Driver
             string config = File.ReadAllText(UtilitiesGeneral.GetApplicationRoot("Xerxes.conf"));
             UtilitiesConfiguration utilConfiguration = new UtilitiesConfiguration(config);
             INetworkConfiguration networkConfiguration = new NetworkConfiguration();
-            UtilitiesConsole UCon = UtilitiesConsole.Instance;
+            UtilitiesLogger UCon = UtilitiesLogger.Instance;
             networkConfiguration.Turf = (Turf)options.Turf.Value;
             networkConfiguration.ReceivePort = options.ReceivePort.Value;
             NetworkPeers peers = new NetworkPeers(utilConfiguration.GetOrDefault<int>("maxinbound", 117), utilConfiguration.GetOrDefault<int>("maxoutbound", 8));

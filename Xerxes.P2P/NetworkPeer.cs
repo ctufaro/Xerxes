@@ -123,7 +123,7 @@ namespace Xerxes.P2P
                     }
                     catch
                     {
-                        Console.WriteLine("ERROR While Combining Peers");
+                        UtilitiesLogger.WriteLine("ERROR While Combining Peers", LoggerType.Error);
                     }
                 }
             }            

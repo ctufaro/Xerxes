@@ -6,22 +6,35 @@ using System.Threading;
 
 namespace Xerxes.Utils
 {
-    public sealed class UtilitiesConsole
+    public sealed class UtilitiesLogger
     {
         private static Dictionary<string, Tuple<int,string>> shit = new Dictionary<string, Tuple<int, string>>();
-        private static readonly Lazy<UtilitiesConsole> lazy = new Lazy<UtilitiesConsole>(() => new UtilitiesConsole());
+        private static readonly Lazy<UtilitiesLogger> lazy = new Lazy<UtilitiesLogger>(() => new UtilitiesLogger());
     
-        public static UtilitiesConsole Instance { get { return lazy.Value; } }
+        public static UtilitiesLogger Instance { get { return lazy.Value; } }
         private UCommand[] stats = new UCommand[]{UCommand.OutboundPeers,
                                                   UCommand.InBoundPeers,
                                                   UCommand.StatusOutbound,
                                                   UCommand.StatusInbound};
         private static int spCnt;
 
-        private UtilitiesConsole()
+        private UtilitiesLogger()
         {
             PrintTitle();
             PrintStats();
+        }
+
+        public static void WriteLine(string message, LoggerType @type)
+        {
+            if(type==LoggerType.Debug && System.Diagnostics.Debugger.IsAttached)
+                Console.WriteLine(message);
+            else
+            {
+                if (type != LoggerType.Debug)
+                {
+                    Console.WriteLine(message);
+                }
+            }
         }
 
         private void PrintTitle()
@@ -59,6 +72,14 @@ namespace Xerxes.Utils
             Console.SetCursorPosition(0, spCnt);
         }
 
+    }
+
+    public enum LoggerType
+    {
+        Error,
+        Fatal,
+        Info,
+        Debug
     }
 
     public class UCommand

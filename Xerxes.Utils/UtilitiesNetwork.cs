@@ -62,6 +62,7 @@ namespace Xerxes.Utils
             List<IPEndPoint> retPorts = new List<IPEndPoint>();
             foreach(string port in ports)
             {
+                //this Loopback is OK
                 retPorts.Add(new IPEndPoint(IPAddress.Loopback, Int32.Parse(port)));            
             }
 
