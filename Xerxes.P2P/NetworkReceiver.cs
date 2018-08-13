@@ -6,8 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xerxes.Utils;
-using GenericProtocol;
-using GenericProtocol.Implementation;
+using Xerxes.TCP;
+using Xerxes.TCP.Implementation;
 using System.Linq;
 
 namespace Xerxes.P2P

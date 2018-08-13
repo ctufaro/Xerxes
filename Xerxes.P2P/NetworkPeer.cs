@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using GenericProtocol.Implementation;
+using Xerxes.TCP.Implementation;
 using Xerxes.Utils;
 
 namespace Xerxes.P2P
