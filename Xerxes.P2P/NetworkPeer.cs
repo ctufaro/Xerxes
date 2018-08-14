@@ -95,6 +95,12 @@ namespace Xerxes.P2P
             return this.peers[ipEndPoint];
         }
 
+        public void RemovePeer(IPEndPoint ipEndPoint)
+        {
+            NetworkPeer np = null;
+            this.peers.TryRemove(ipEndPoint.ToString(), out np);
+        }
+
         public void UpdatePeerConnection(string peerId, ProtoClient<NetworkMessage> proto)
         {
             NetworkPeer peer = this.peers[peerId];

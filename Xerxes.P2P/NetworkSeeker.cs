@@ -77,6 +77,7 @@ namespace Xerxes.P2P
                         p.ProtoClient.AutoReconnect = true;
                         UtilitiesLogger.WriteLine(string.Format("Seeker: created a new socket for {0}", p.IPEnd.ToString()), LoggerType.Info);
                         protoClient.ReceivedMessage += ClientReceivedMessage;
+                        protoClient.ConnectionLost += ProtoClient_ConnectionLost;
                         await p.ProtoClient.Connect(true);
                         if(p.ProtoClient.ConnectionStatus == ConnectionStatus.Connected)
                         {
@@ -92,6 +93,14 @@ namespace Xerxes.P2P
                     }
                 }
             }           
+
+        }
+
+        private void ProtoClient_ConnectionLost(IPEndPoint endPoint)
+        {
+            this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
+            this.Peers.Remove(endPoint);
+            UtilitiesLogger.WriteLine(string.Format("Seeker: destroyed socket on {0}", endPoint.ToString()), LoggerType.Info);
 
         }
 
