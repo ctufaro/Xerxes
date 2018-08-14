@@ -74,6 +74,7 @@ namespace Xerxes.P2P
                         //lets create a new socket for each peer and save it
                         ProtoClient<NetworkMessage> protoClient = new ProtoClient<NetworkMessage>(p.IPEnd.Address, p.IPEnd.Port);
                         p.ProtoClient = protoClient;
+                        p.ProtoClient.AutoReconnect = true;
                         UtilitiesLogger.WriteLine(string.Format("Seeker: created a new socket for {0}", p.IPEnd.ToString()), LoggerType.Info);
                         protoClient.ReceivedMessage += ClientReceivedMessage;
                         await p.ProtoClient.Connect(true);

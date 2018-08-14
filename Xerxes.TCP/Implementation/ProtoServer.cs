@@ -208,8 +208,8 @@ namespace Xerxes.TCP.Implementation
 
                     ReceivedMessage?.Invoke(endpoint, message); // call event
                 } catch (SocketException ex)
-                {
-                    Console.WriteLine(ex.ErrorCode);
+                {                    
+                    PrintErrorCode(ex.ErrorCode);
                     bool success = DisconnectClient(endpoint); // try to disconnect
                     if (success)
                         return; // Exit Reading loop once successfully disconnected
@@ -247,7 +247,8 @@ namespace Xerxes.TCP.Implementation
                 }
 
                 // Client does not respond, disconnect & exit
-                DisconnectClient(client.RemoteEndPoint as IPEndPoint);
+                if(client.Connected)
+                    DisconnectClient(client.RemoteEndPoint as IPEndPoint);
                 return;
             }
         }
@@ -276,6 +277,11 @@ namespace Xerxes.TCP.Implementation
             }
 
             return true;
+        }
+
+        private void PrintErrorCode(int errorCode)
+        {
+            //Console.WriteLine(errorCode);
         }
 
         #endregion
