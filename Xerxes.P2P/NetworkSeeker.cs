@@ -99,7 +99,7 @@ namespace Xerxes.P2P
         private void ProtoClient_ConnectionLost(IPEndPoint endPoint)
         {
             this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
-            this.Peers.Remove(endPoint);
+            this.Peers.RemovePeer(endPoint);
             UtilitiesLogger.WriteLine(string.Format("Seeker: destroyed socket on {0}", endPoint.ToString()), LoggerType.Info);
 
         }
