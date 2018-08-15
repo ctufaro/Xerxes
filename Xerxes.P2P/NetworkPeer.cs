@@ -72,14 +72,18 @@ namespace Xerxes.P2P
             }
         }
         public NetworkPeerMessage AddOutboundPeer(NetworkPeer toBeAdded)
-        {
+        {            
             if (this.peers.Count < MaxOutBound)
             {
                 bool result = this.peers.TryAdd(toBeAdded.IPEnd.ToString(), toBeAdded);
                 if (result)
+                {
                     return NetworkPeerMessage.Success;
+                }
                 else
+                {
                     return NetworkPeerMessage.AlreadyExists;
+                }
             }
             else
             {
@@ -103,15 +107,15 @@ namespace Xerxes.P2P
             this.peers.TryRemove(ipEndPoint.ToString(), out np);
         }
 
-        public async Task Broadcast(NetworkMessage message, int fanout)
+        public async Task Broadcast(NetworkMessage message, int fanout = 0)
         {
             NetworkPeer[] peerArray = this.peers.Values.ToArray();
-            IEnumerable<NetworkPeer> fanArray = peerArray.Shuffle().Take(fanout);
+            IEnumerable<NetworkPeer> fanArray = (fanout > 0) ? peerArray.Shuffle().Take(fanout) : peerArray;
             foreach (var peer in fanArray)
             {
                 if(peer.IsConnected)
                 {
-                    Console.WriteLine("Sending red to {0}", peer.IPEnd.ToString());
+                    UtilitiesLogger.WriteLine(LoggerType.Debug, "Sending red to {0}", peer.IPEnd.ToString());
                     await peer.ProtoClient.Send(message);
                 }
             }
@@ -145,7 +149,7 @@ namespace Xerxes.P2P
                     }
                     catch
                     {
-                        UtilitiesLogger.WriteLine("ERROR While Combining Peers", LoggerType.Error);
+                        UtilitiesLogger.WriteLine(LoggerType.Error, "ERROR While Combining Peers");
                     }
                 }
             }            

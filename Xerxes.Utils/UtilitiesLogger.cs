@@ -24,18 +24,25 @@ namespace Xerxes.Utils
             PrintStats();
         }
 
-        public static void WriteLine(string message, LoggerType @type)
-        {
+        public static void WriteLine(LoggerType @type, string format, params object[] parameters)
+        {   
             if(type==LoggerType.Debug && System.Diagnostics.Debugger.IsAttached)
-                Console.WriteLine(message);
+            {
+                if(parameters.Length > 0)
+                    Console.WriteLine(format, parameters);
+                else
+                    Console.WriteLine(format);            }
             else
             {
                 if (type != LoggerType.Debug)
                 {
-                    Console.WriteLine(message);
+                    if(parameters.Length > 0)
+                        Console.WriteLine(format, parameters);
+                    else
+                        Console.WriteLine(format);
                 }
             }
-        }
+        }   
 
         private void PrintTitle()
         {
