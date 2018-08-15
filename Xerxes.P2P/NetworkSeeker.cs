@@ -77,13 +77,14 @@ namespace Xerxes.P2P
                         p.ProtoClient.AutoReconnect = true;
                         UtilitiesLogger.WriteLine(string.Format("Seeker: created a new socket for {0}", p.IPEnd.ToString()), LoggerType.Info);
                         protoClient.ReceivedMessage += ClientReceivedMessage;
-                        protoClient.ConnectionLost += ProtoClient_ConnectionLost;
+                        protoClient.ConnectionLost += ProtoClient_ConnectionLost;                        
                         await p.ProtoClient.Connect(true);
                         if(p.ProtoClient.ConnectionStatus == ConnectionStatus.Connected)
                         {
                             //lets send a status of connected
                             p.IsConnected = true;
                             NetworkMessage networkMessage = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = this.netConfig.ReceivePort, MessageStateType = MessageType.Connected, KnownPeers = this.Peers.ConvertPeersToStringArray() };
+                            Thread.Sleep(1000);
                             await p.ProtoClient.Send(networkMessage);
                         }
                     }

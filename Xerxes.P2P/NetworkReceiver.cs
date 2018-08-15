@@ -10,6 +10,7 @@ using Xerxes.TCP;
 using Xerxes.TCP.Implementation;
 using System.Linq;
 
+
 namespace Xerxes.P2P
 {
     public class NetworkReceiver
@@ -107,6 +108,17 @@ namespace Xerxes.P2P
             {
                 sender.MessageStateType = MessageType.Gab;
                 await receiver.Send(sender, sndrIp);
+            }
+
+            if (message.MessageStateType == MessageType.TurnRed)
+            {
+                sender.MessageStateType = MessageType.TurnRed;
+                if (Console.BackgroundColor != ConsoleColor.Red)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.Clear();                    
+                    await this.Peers.Broadcast(sender, 4);
+                }
             }
 
             UtilitiesLogger.WriteLine(string.Format("Receiver: message ({0}) sent", sender.MessageStateType.ToString()), LoggerType.Debug);           

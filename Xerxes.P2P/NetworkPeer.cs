@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
+using Xerxes.P2P.Extensions;
 using Xerxes.TCP.Implementation;
 using Xerxes.Utils;
 
@@ -99,6 +101,20 @@ namespace Xerxes.P2P
         {
             NetworkPeer np = null;
             this.peers.TryRemove(ipEndPoint.ToString(), out np);
+        }
+
+        public async Task Broadcast(NetworkMessage message, int fanout)
+        {
+            NetworkPeer[] peerArray = this.peers.Values.ToArray();
+            IEnumerable<NetworkPeer> fanArray = peerArray.Shuffle().Take(fanout);
+            foreach (var peer in fanArray)
+            {
+                if(peer.IsConnected)
+                {
+                    Console.WriteLine("Sending red to {0}", peer.IPEnd.ToString());
+                    await peer.ProtoClient.Send(message);
+                }
+            }
         }
 
         public void UpdatePeerConnection(string peerId, ProtoClient<NetworkMessage> proto)
