@@ -49,16 +49,16 @@ namespace Xerxes.P2P
             try
             {
                 int delay = this.utilConf.GetOrDefault<int>("peerdiscoveryin", 86400000);
-                UtilitiesLogger.WriteLine("Seeker: Seeking Peers", LoggerType.Debug);
+                UtilitiesLogger.WriteLine(LoggerType.Debug, "Seeker: Seeking Peers");
                 await networkDiscovery.DiscoverPeersAsync();
-                UtilitiesLogger.WriteLine(string.Format("Seeker: {0} Peers Discovered, attempting to connect", this.Peers.GetPeerCount()), LoggerType.Debug);
+                UtilitiesLogger.WriteLine(LoggerType.Debug, "Seeker: {0} Peers Discovered, attempting to connect", this.Peers.GetPeerCount());
                 while (!this.serverCancel.IsCancellationRequested)
                 { 
                     await ConnectToPeers();
                     Thread.Sleep(1000);
                 }
             }
-            catch(Exception ex) { UtilitiesLogger.WriteLine(ex.ToString(), LoggerType.Error); }
+            catch(Exception ex) { UtilitiesLogger.WriteLine(LoggerType.Error, ex.ToString()); }
         }
 
         private async Task ConnectToPeers()
@@ -75,7 +75,7 @@ namespace Xerxes.P2P
                         ProtoClient<NetworkMessage> protoClient = new ProtoClient<NetworkMessage>(p.IPEnd.Address, p.IPEnd.Port);
                         p.ProtoClient = protoClient;
                         p.ProtoClient.AutoReconnect = true;
-                        UtilitiesLogger.WriteLine(string.Format("Seeker: created a new socket for {0}", p.IPEnd.ToString()), LoggerType.Info);
+                        UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: created a new socket for {0}", p.IPEnd.ToString());
                         protoClient.ReceivedMessage += ClientReceivedMessage;
                         protoClient.ConnectionLost += ProtoClient_ConnectionLost;                        
                         await p.ProtoClient.Connect(true);
@@ -89,8 +89,8 @@ namespace Xerxes.P2P
                         }
                     }
                     catch(Exception e)
-                    {
-                        Console.WriteLine("Seeker: error while connecting ({0})", e.ToString());
+                    {                        
+                        UtilitiesLogger.WriteLine(LoggerType.Error, "Seeker: error while connecting ({0})", e.ToString());
                     }
                 }
             }           
@@ -101,7 +101,7 @@ namespace Xerxes.P2P
         {
             this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
             this.Peers.RemovePeer(endPoint);
-            UtilitiesLogger.WriteLine(string.Format("Seeker: destroyed socket on {0}", endPoint.ToString()), LoggerType.Info);
+            UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: destroyed socket on {0}", endPoint.ToString());
 
         }
 

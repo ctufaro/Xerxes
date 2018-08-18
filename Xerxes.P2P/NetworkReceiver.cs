@@ -49,14 +49,14 @@ namespace Xerxes.P2P
                 await Task.Run(() =>
                 {                    
                     receiver.Start();
-                    UtilitiesLogger.WriteLine("Receiver: Server started on " + this.LocalEndpoint.ToString(), LoggerType.Info);
+                    UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: Server started on {0}", this.LocalEndpoint.ToString());
                     receiver.ClientConnected += ClientConnectedAsync;
                     receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
             }
             catch (Exception e)
             {
-                UtilitiesLogger.WriteLine(e.ToString(), LoggerType.Error);
+                UtilitiesLogger.WriteLine(LoggerType.Error, e.ToString());
             }
         }
 
@@ -84,7 +84,7 @@ namespace Xerxes.P2P
             catch (Exception e)
             {
                 sender.MessageStateType = MessageType.Failed;
-                UtilitiesLogger.WriteLine(e.ToString(), LoggerType.Error);                
+                UtilitiesLogger.WriteLine(LoggerType.Error, e.ToString());                
             }
 
             await receiver.Send(sender, address);
@@ -92,7 +92,7 @@ namespace Xerxes.P2P
 
         private async void ServerMessageReceivedAsync(IPEndPoint sndrIp, NetworkMessage message)
         {
-            UtilitiesLogger.WriteLine(string.Format("Receiver: message ({0}) received", message.MessageStateType.ToString()), LoggerType.Debug);
+            UtilitiesLogger.WriteLine(LoggerType.Debug, "Receiver: message ({0}) received", message.MessageStateType.ToString());
             NetworkMessage sender = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = networkConfiguration.ReceivePort, KnownPeers = this.Peers.ConvertPeersToStringArray()};
 
             if (message.MessageStateType == MessageType.Connected)
@@ -117,11 +117,11 @@ namespace Xerxes.P2P
                 {
                     Console.BackgroundColor = ConsoleColor.Red;
                     Console.Clear();                    
-                    await this.Peers.Broadcast(sender, 4);
+                    await this.Peers.Broadcast(sender);
                 }
             }
 
-            UtilitiesLogger.WriteLine(string.Format("Receiver: message ({0}) sent", sender.MessageStateType.ToString()), LoggerType.Debug);           
+            UtilitiesLogger.WriteLine(LoggerType.Debug, "Receiver: message ({0}) sent", sender.MessageStateType.ToString());           
             
         }
 
