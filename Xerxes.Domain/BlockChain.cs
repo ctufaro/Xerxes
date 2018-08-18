@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZeroFormatter;
 
 namespace Xerxes.Domain
 {
-
+    [ZeroFormattable]
     public class BlockChain : IEnumerable<Block>
     {
-        private List<Block> MasterChain { get; set; }
+        [Index(0)]
+        public virtual List<Block> MasterChain { get; set; }
 
         private void Init()
         {
@@ -52,6 +54,11 @@ namespace Xerxes.Domain
             if(isValidBlock)
                 MasterChain.Add(newBlock);
             return isValidBlock;
+        }
+
+        public bool AddBlock(Block newBlock)
+        {
+            return AddBlock(newBlock.Post, newBlock.Poster);
         }
 
         private string CalcHashBlock(Block block)

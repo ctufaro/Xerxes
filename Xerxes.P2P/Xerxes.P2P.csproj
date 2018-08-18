@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\Xerxes.Domain\Xerxes.Domain.csproj" />
     <ProjectReference Include="..\Xerxes.TCP\Xerxes.TCP.csproj" />
     <ProjectReference Include="..\Xerxes.Utils\Xerxes.Utils.csproj" />
   </ItemGroup>

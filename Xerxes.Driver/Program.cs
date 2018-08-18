@@ -9,6 +9,7 @@ using CommandLine;
 using CommandLine.Text;
 using Xerxes.Utils;
 using Xerxes.P2P;
+using Xerxes.Domain;
 
 namespace Xerxes.Driver
 {
@@ -18,7 +19,7 @@ namespace Xerxes.Driver
         {     
             if (Debugger.IsAttached)
             {
-                Start(new Options { Receive = true, ReceivePort = 1000, Seek = true, Turf = 1 });
+                Start(new Options { Receive = true, ReceivePort = 1255, Seek = true, Turf = 1 });
             }
             else
             {
@@ -35,16 +36,17 @@ namespace Xerxes.Driver
             networkConfiguration.Turf = (Turf)options.Turf.Value;
             networkConfiguration.ReceivePort = options.ReceivePort.Value;
             NetworkPeers peers = new NetworkPeers(utilConfiguration.GetOrDefault<int>("maxinbound", 117), utilConfiguration.GetOrDefault<int>("maxoutbound", 8));
+            BlockChain blockChain = new BlockChain();
 
             if (options.Receive.Value)
             {
-                NetworkReceiver networkReceiver = new NetworkReceiver(networkConfiguration, utilConfiguration, ref peers); 
+                NetworkReceiver networkReceiver = new NetworkReceiver(networkConfiguration, utilConfiguration, ref peers, ref blockChain); 
                 Task.Run(()=> networkReceiver.ReceivePeersAsync());
             }            
 
             if(options.Seek.Value)
             {                
-                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration, ref peers);
+                NetworkSeeker networkSeeker = new NetworkSeeker(networkConfiguration, utilConfiguration, ref peers, ref blockChain);
                 Task.Run(()=> networkSeeker.SeekPeersAsync());
             }
 

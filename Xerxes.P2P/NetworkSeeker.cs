@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xerxes.Domain;
 using Xerxes.TCP.Implementation;
 using Xerxes.Utils;
 
@@ -26,12 +27,14 @@ namespace Xerxes.P2P
 
         private NetworkPeers Peers;
 
+        private BlockChain BlockChain;
+
         private NetworkDiscovery networkDiscovery;
 
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
 
-        public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
+        public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers, ref BlockChain blockChain)
         {
             this.serverCancel = new CancellationTokenSource();
             this.seekReset = new CancellationTokenSource();
@@ -39,6 +42,7 @@ namespace Xerxes.P2P
             this.netConfig = networkConfiguration;
             this.utilConf = utilConf;
             this.Peers = peers;
+            this.BlockChain = blockChain;
             this.networkDiscovery = new NetworkDiscovery(this.netConfig, peers, this.utilConf);            
         }
 

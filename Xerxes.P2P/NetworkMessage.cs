@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
+using Xerxes.Domain;
 using ZeroFormatter;
 
 namespace Xerxes.P2P
@@ -18,6 +19,10 @@ namespace Xerxes.P2P
         public virtual MessageType MessageStateType {get;set;}
         [Index(3)]
         public virtual string[] KnownPeers { get; set; }
+        [Index(4)]
+        public virtual Block Block { get; set; }
+        [Index(5)]
+        public virtual BlockChain BlockChain { get; set; }
     }        
         
 

@@ -9,7 +9,7 @@ using Xerxes.Utils;
 using Xerxes.TCP;
 using Xerxes.TCP.Implementation;
 using System.Linq;
-
+using Xerxes.Domain;
 
 namespace Xerxes.P2P
 {
@@ -30,9 +30,10 @@ namespace Xerxes.P2P
         
         /// <summary>List of all inbound peers.</summary>
         private NetworkPeers Peers;
-        /// <summary>Task accepting new clients in a loop.</summary>
+
+        private BlockChain BlockChain;
        
-        public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf, ref NetworkPeers peers)
+        public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf, ref NetworkPeers peers, ref BlockChain blockChain)
         {
             this.utilConf = utilConf;
             this.LocalEndpoint = NetworkDiscovery.GetEndPoint(netConfig.Turf, utilConf, netConfig.ReceivePort);
@@ -40,6 +41,7 @@ namespace Xerxes.P2P
             this.serverCancel = new CancellationTokenSource();
             this.networkConfiguration = netConfig;
             this.Peers = peers;
+            this.BlockChain = blockChain;
         }
 
         public async Task ReceivePeersAsync()    
@@ -119,6 +121,13 @@ namespace Xerxes.P2P
                     Console.Clear();                    
                     await this.Peers.Broadcast(sender);
                 }
+            }
+
+            if (message.MessageStateType == MessageType.AddBlock)
+            {
+                UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}-{1}]", sender.Block.Poster, sender.Block.Post);
+                this.BlockChain.AddBlock(sender.Block);
+                await this.Peers.Broadcast(sender);
             }
 
             UtilitiesLogger.WriteLine(LoggerType.Debug, "Receiver: message ({0}) sent", sender.MessageStateType.ToString());           

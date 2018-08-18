@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.2.1" />
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Xerxes.Domain\Xerxes.Domain.csproj" />
     <ProjectReference Include="..\Xerxes.P2P\Xerxes.P2P.csproj" />
+    <ProjectReference Include="..\Xerxes.TCP\Xerxes.TCP.csproj" />
   </ItemGroup>
+
 </Project>

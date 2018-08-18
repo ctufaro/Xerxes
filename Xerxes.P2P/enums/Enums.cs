@@ -31,6 +31,8 @@ namespace Xerxes.P2P
         Gab,
         /// <summary> Not Accepting Connections</summary>
         NotAccepting,
-        TurnRed
+        TurnRed,
+        DownloadBlock,
+        AddBlock
     }  
 }

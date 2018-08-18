@@ -4,18 +4,37 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ZeroFormatter;
 
 namespace Xerxes.Domain
 {
 
+    [ZeroFormattable]
     public class Block : IEquatable<Block>
     {
-        public int Index { get; set; }
-        public DateTime TimeStamp { get; set; }
-        public string Poster { get; set; }
-        public string Post { get; set; }
-        public string Hash { get; set; }
-        public string PrevHash { get; set; }
+        [Index(0)]
+        public virtual int Index { get; set; }
+        [Index(1)]
+        public virtual DateTime TimeStamp { get; set; }
+        [Index(2)]
+        public virtual string Poster { get; set; }
+        [Index(3)]
+        public virtual string Post { get; set; }
+        [Index(4)]
+        public virtual string Hash { get; set; }
+        [Index(5)]
+        public virtual string PrevHash { get; set; }
+
+        public Block()
+        {
+
+        }
+
+        public Block(string Poster, string Post)
+        {
+            this.Poster = Poster;
+            this.Post = Post;
+        }
 
         public Block(int Index, DateTime TimeStamp, string Poster, string Post, string Hash, string PrevHash)
         {
