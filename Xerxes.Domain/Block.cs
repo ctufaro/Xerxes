@@ -24,14 +24,17 @@ namespace Xerxes.Domain
         public virtual string Hash { get; set; }
         [Index(5)]
         public virtual string PrevHash { get; set; }
+        [Index(6)]
+        public virtual string Guid { get; set; }
 
         public Block()
         {
 
         }
 
-        public Block(string Poster, string Post)
+        public Block(string Guid, string Poster, string Post)
         {
+            this.Guid = Guid;
             this.Poster = Poster;
             this.Post = Post;
         }
@@ -79,7 +82,7 @@ namespace Xerxes.Domain
 
         public override string ToString()
         {
-            return string.Format("{0} {1} {2} {3} {4}", Index, PrevHash, TimeStamp, Poster, Post);
+            return string.Format("{0} {1} {2} {3} {4} {5}", Index, PrevHash, TimeStamp, Poster, Post, (Guid!=null)?Guid:"");
         }
     }
 }

@@ -124,10 +124,13 @@ namespace Xerxes.P2P
             }
 
             if (message.MessageStateType == MessageType.AddBlock)
-            {
-                UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}-{1}]", sender.Block.Poster, sender.Block.Post);
-                this.BlockChain.AddBlock(sender.Block);
-                await this.Peers.Broadcast(sender);
+            {                
+                if (!this.BlockChain.ContainsBlock(message.Block))
+                {
+                    this.BlockChain.AddBlock(message.Block);
+                    UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}]", BlockChain.PrintChain());
+                    await this.Peers.Broadcast(message);
+                }
             }
 
             UtilitiesLogger.WriteLine(LoggerType.Debug, "Receiver: message ({0}) sent", sender.MessageStateType.ToString());           

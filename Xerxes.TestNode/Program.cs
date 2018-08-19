@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Xerxes.Domain;
 using Xerxes.P2P;
 using Xerxes.TCP.Implementation;
 
@@ -107,7 +108,8 @@ namespace Xerxes.TestNode
             Console.WriteLine("Connected!");
             await _client.Send(message);
 
-            message.MessageStateType = MessageType.TurnRed;
+            message.MessageStateType = MessageType.AddBlock;
+            message.Block = new Block(Guid.NewGuid().ToString(), "Teddy", "haboo");
             await _client.Send(message);
         }
 

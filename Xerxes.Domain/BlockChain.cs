@@ -13,11 +13,13 @@ namespace Xerxes.Domain
     {
         [Index(0)]
         public virtual List<Block> MasterChain { get; set; }
+        private Dictionary<string, bool> messageGuid;
 
         private void Init()
         {
             MasterChain = new List<Block>();
             MasterChain.Add(GenerateGenesisBlock());
+            messageGuid = new Dictionary<string, bool>();
         }
 
         public BlockChain()
@@ -30,12 +32,14 @@ namespace Xerxes.Domain
             return this;
         }
 
-        public void PrintChain()
+        public string PrintChain()
         {
-            foreach (Block b in MasterChain)
+            StringBuilder b = new StringBuilder();
+            foreach (Block blk in MasterChain)
             {
-                Console.WriteLine(b);
+                b.AppendLine(blk.ToString());
             }
+            return b.ToString();
         }
 
         private Block GenerateGenesisBlock()
@@ -43,7 +47,7 @@ namespace Xerxes.Domain
             return new Block(0, new DateTime(2013, 7, 22), "Chris", "Rejoice the Genesis Block!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7", ":)");
         }
 
-        public bool AddBlock(string poster, string post)
+        public bool AddBlock(string post, string poster)
         {
             Block previousBlock = GetLatestBlock();
             int nextIndex = previousBlock.Index + 1;
@@ -58,7 +62,18 @@ namespace Xerxes.Domain
 
         public bool AddBlock(Block newBlock)
         {
-            return AddBlock(newBlock.Post, newBlock.Poster);
+            string newMsgGuid = newBlock.Guid.ToString();
+            if (!messageGuid.ContainsKey(newMsgGuid))
+            {
+                messageGuid.Add(newMsgGuid, true);
+                return AddBlock(newBlock.Post, newBlock.Poster);
+            }
+            return false;
+        }
+
+        public bool ContainsBlock(Block newBlock)
+        {
+            return messageGuid.ContainsKey(newBlock.Guid.ToString());
         }
 
         private string CalcHashBlock(Block block)
