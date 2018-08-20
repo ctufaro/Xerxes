@@ -19,7 +19,7 @@ namespace Xerxes.Driver
         {     
             if (Debugger.IsAttached)
             {
-                Start(new Options { Receive = true, ReceivePort = 1255, Seek = true, Turf = 1 });
+                Start(new Options { Receive = true, ReceivePort = 1000, Seek = true, Turf = 1 });
             }
             else
             {
@@ -37,7 +37,6 @@ namespace Xerxes.Driver
             networkConfiguration.ReceivePort = options.ReceivePort.Value;
             NetworkPeers peers = new NetworkPeers(utilConfiguration.GetOrDefault<int>("maxinbound", 117), utilConfiguration.GetOrDefault<int>("maxoutbound", 8));
             BlockChain blockChain = new BlockChain();
-            UtilitiesLogger.WriteLine(LoggerType.Info, "Node Born @ {0}", DateTime.UtcNow);
 
             if (options.Receive.Value)
             {

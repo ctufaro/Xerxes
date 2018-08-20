@@ -26,6 +26,11 @@ namespace Xerxes.Domain
         {
             Init();
         }
+
+        public int Count()
+        {
+            return this.MasterChain.Count;
+        }
         
         public BlockChain DownloadChain()
         {

@@ -85,11 +85,18 @@ namespace Xerxes.P2P
                         await p.ProtoClient.Connect(true);
                         if(p.ProtoClient.ConnectionStatus == ConnectionStatus.Connected)
                         {
-                            //lets send a status of connected
+                            //lets send back a status of connected
                             p.IsConnected = true;
                             NetworkMessage networkMessage = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = this.netConfig.ReceivePort, MessageStateType = MessageType.Connected, KnownPeers = this.Peers.ConvertPeersToStringArray() };
                             Thread.Sleep(1000);
                             await p.ProtoClient.Send(networkMessage);
+
+                            //if our blockchain has only a single block, we're not up-to-date, let's request ages from the nodes
+                            if(this.BlockChain.Count() == 1)
+                            {
+                                networkMessage.MessageStateType = MessageType.RequestAge;
+                                await p.ProtoClient.Send(networkMessage);
+                            }
                         }
                     }
                     catch(Exception e)
@@ -106,12 +113,14 @@ namespace Xerxes.P2P
             this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
             this.Peers.RemovePeer(endPoint);
             UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: destroyed socket on {0}", endPoint.ToString());
-
         }
 
         private void ClientReceivedMessage(IPEndPoint senderEndPoint, NetworkMessage message)
         {
-            
+            if(message.MessageStateType == MessageType.RequestAge)
+            {
+                UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: I found a node with age {0}", message.Age);
+            }
         }
     }
 }

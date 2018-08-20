@@ -32,6 +32,8 @@ namespace Xerxes.P2P
         private NetworkPeers Peers;
 
         private BlockChain BlockChain;
+
+        private DateTime Age;
        
         public NetworkReceiver(INetworkConfiguration netConfig, UtilitiesConfiguration utilConf, ref NetworkPeers peers, ref BlockChain blockChain)
         {
@@ -42,6 +44,7 @@ namespace Xerxes.P2P
             this.networkConfiguration = netConfig;
             this.Peers = peers;
             this.BlockChain = blockChain;
+            this.Age = DateTime.UtcNow;
         }
 
         public async Task ReceivePeersAsync()    
@@ -51,7 +54,7 @@ namespace Xerxes.P2P
                 await Task.Run(() =>
                 {                    
                     receiver.Start();
-                    UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: Server started on {0}", this.LocalEndpoint.ToString());
+                    UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: Server started on {0} at {1}", this.LocalEndpoint.ToString(), Age);
                     receiver.ClientConnected += ClientConnectedAsync;
                     receiver.ReceivedMessage += ServerMessageReceivedAsync;
                 });
@@ -131,6 +134,21 @@ namespace Xerxes.P2P
                     UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}]", BlockChain.PrintChain());
                     await this.Peers.Broadcast(message);
                 }
+            }
+
+            if (message.MessageStateType == MessageType.DownloadChain)
+            {
+                //send chain back to the requester (1)
+                sender.BlockChain = this.BlockChain;
+                await receiver.Send(sender, sndrIp);
+            }
+
+            if (message.MessageStateType == MessageType.RequestAge)
+            {
+                //send chain back to the requester (1)
+                sender.MessageStateType = MessageType.RequestAge;
+                sender.Age = Age;
+                await receiver.Send(sender, sndrIp);
             }
 
             UtilitiesLogger.WriteLine(LoggerType.Debug, "Receiver: message ({0}) sent", sender.MessageStateType.ToString());           

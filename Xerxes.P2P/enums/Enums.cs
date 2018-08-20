@@ -32,7 +32,8 @@ namespace Xerxes.P2P
         /// <summary> Not Accepting Connections</summary>
         NotAccepting,
         TurnRed,
-        DownloadBlock,
-        AddBlock
+        DownloadChain,
+        AddBlock,
+        RequestAge
     }  
 }

@@ -23,6 +23,8 @@ namespace Xerxes.P2P
         public virtual Block Block { get; set; }
         [Index(5)]
         public virtual BlockChain BlockChain { get; set; }
+        [Index(6)]
+        public virtual DateTime Age { get; set; }
     }        
         
 
