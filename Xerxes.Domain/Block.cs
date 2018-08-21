@@ -10,7 +10,7 @@ namespace Xerxes.Domain
 {
 
     [ZeroFormattable]
-    public class Block : IEquatable<Block>
+    public class Block : IBlock, IEquatable<Block>
     {
         [Index(0)]
         public virtual int Index { get; set; }

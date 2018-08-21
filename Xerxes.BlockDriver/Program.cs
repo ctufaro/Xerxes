@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using Xerxes.Domain;
 
 namespace Xerxes.BlockDriver
 {
     class Program
     {
+        
+
         static void Main(string[] args)
         {
             //BlockChain myChain = new BlockChain();
@@ -17,6 +22,12 @@ namespace Xerxes.BlockDriver
 
             //myChain2.AddBlock("Chris", "Fifth Post");
             //myChain2.PrintChain();
+            SortedList<DateTime, string> sl = new SortedList<DateTime, string>();
+            DateTime now = DateTime.Now;
+            sl.TryAdd(now, "A");
+            sl.TryAdd(now, "B");
+            Thread.Sleep(2000);
+            sl.TryAdd(DateTime.Now, "C");
             Console.ReadLine();
         }
     }

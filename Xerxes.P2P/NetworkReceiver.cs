@@ -134,20 +134,22 @@ namespace Xerxes.P2P
                     UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}]", BlockChain.PrintChain());
                     await this.Peers.Broadcast(message);
                 }
+            }            
+
+            if (message.MessageStateType == MessageType.RequestAge)
+            {
+                //send age back to the requester
+                sender.MessageStateType = MessageType.RequestAge;
+                sender.Age = Age;
+                await receiver.Send(sender, sndrIp);
             }
 
             if (message.MessageStateType == MessageType.DownloadChain)
             {
-                //send chain back to the requester (1)
-                sender.BlockChain = this.BlockChain;
-                await receiver.Send(sender, sndrIp);
-            }
-
-            if (message.MessageStateType == MessageType.RequestAge)
-            {
-                //send chain back to the requester (1)
-                sender.MessageStateType = MessageType.RequestAge;
+                //send chain back to the requester
+                sender.MessageStateType = MessageType.DownloadChain;
                 sender.Age = Age;
+                sender.BlockChain = this.BlockChain;
                 await receiver.Send(sender, sndrIp);
             }
 

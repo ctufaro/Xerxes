@@ -13,18 +13,19 @@ namespace Xerxes.Domain
     {
         [Index(0)]
         public virtual List<Block> MasterChain { get; set; }
+
         private Dictionary<string, bool> messageGuid;
 
-        private void Init()
+        public void Init()
         {
-            MasterChain = new List<Block>();
+            this.MasterChain = new List<Block>();
+            this.messageGuid = new Dictionary<string, bool>();
             MasterChain.Add(GenerateGenesisBlock());
-            messageGuid = new Dictionary<string, bool>();
         }
 
         public BlockChain()
         {
-            Init();
+            
         }
 
         public int Count()

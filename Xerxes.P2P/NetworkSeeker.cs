@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -34,6 +35,8 @@ namespace Xerxes.P2P
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         public IPEndPoint LocalEndpoint { get; private set; }
 
+        private SortedDictionary<DateTime, IPEndPoint> ElderNodes;
+
         public NetworkSeeker(INetworkConfiguration networkConfiguration, UtilitiesConfiguration utilConf, ref NetworkPeers peers, ref BlockChain blockChain)
         {
             this.serverCancel = new CancellationTokenSource();
@@ -43,7 +46,8 @@ namespace Xerxes.P2P
             this.utilConf = utilConf;
             this.Peers = peers;
             this.BlockChain = blockChain;
-            this.networkDiscovery = new NetworkDiscovery(this.netConfig, peers, this.utilConf);            
+            this.networkDiscovery = new NetworkDiscovery(this.netConfig, peers, this.utilConf);
+            this.ElderNodes = new SortedDictionary<DateTime, IPEndPoint>();
         }
 
         public bool TurnColor = false;
@@ -104,7 +108,14 @@ namespace Xerxes.P2P
                         UtilitiesLogger.WriteLine(LoggerType.Error, "Seeker: error while connecting ({0})", e.ToString());
                     }
                 }
-            }           
+            }
+
+            if (this.ElderNodes.Count > 0 && this.BlockChain.Count() == 1)
+            {
+                NetworkMessage message = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = this.netConfig.ReceivePort, MessageStateType = MessageType.DownloadChain };
+                ProtoClient<NetworkMessage> client = this.Peers.GetPeer(this.ElderNodes.First().Value.ToString()).ProtoClient;
+                await client.Send(message);
+            }
 
         }
 
@@ -119,7 +130,18 @@ namespace Xerxes.P2P
         {
             if(message.MessageStateType == MessageType.RequestAge)
             {
-                UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: I found a node with age {0}", message.Age);
+                //UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: I found a node with age {0}", message.Age);
+                this.ElderNodes.TryAdd(message.Age, senderEndPoint);
+            }
+
+            if (message.MessageStateType == MessageType.DownloadChain && message.Age == this.ElderNodes.First().Key)
+            {
+                BlockChain sentChain = message.BlockChain;
+                if(sentChain.Count() > 1 && this.BlockChain.Count() == 1)
+                {
+                    this.BlockChain = sentChain;
+                    UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: Downloaded block [{0}]", BlockChain.PrintChain());
+                }
             }
         }
     }
