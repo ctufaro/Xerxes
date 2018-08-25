@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Red;
 using Xerxes.Domain;
 using Xerxes.P2P;
 using Xerxes.TCP.Implementation;
@@ -19,6 +21,7 @@ namespace Xerxes.TestNode
         private static int myPort = 2000;
         private static int infectPort = 1233;
 
+        #region TCP
         static void Main(string[] args)
         {
             Task.Run(async () =>
@@ -31,7 +34,11 @@ namespace Xerxes.TestNode
                 await StartClientAsync();
             }).GetAwaiter().GetResult();
 
-            Console.WriteLine("Kennnnyyyy!!!");
+            Task.Run(async () =>
+            {
+                await StartWebSocketAsync();
+            }).GetAwaiter().GetResult();
+
             Console.ReadLine();
         }
 
@@ -76,6 +83,12 @@ namespace Xerxes.TestNode
             {
                 sender.MessageStateType = MessageType.Gab;
                 await _server.Send(sender, sndrIp);
+            }
+
+            if (message.MessageStateType == MessageType.AddBlock)
+            {
+                foreach (WebSocketDialog wd in wdcollection)
+                    wd.SendText(message.Block.ToString() + "<br>");                
             }
 
             Console.WriteLine("Receiver: message ({0}) sent", sender.MessageStateType.ToString());
@@ -124,11 +137,77 @@ namespace Xerxes.TestNode
             Environment.Exit(1);
         }
 
-
         private static void ClientMessageReceived(IPEndPoint sender, NetworkMessage message)
         {
             Console.WriteLine($"{sender} {message.MessageStateType.ToString()}");
+            if (message.MessageStateType == MessageType.DownloadChain)
+            {
+                foreach(Block b in message.BlockChain)
+                {
+                    foreach(WebSocketDialog wd in wdcollection)
+                        wd.SendText(b.ToString()+"<br>");
+                }                
+            }
+            
+
+            Console.WriteLine("sending back to server");
+        }
+        #endregion
+
+        #region WebSocket
+        private static List<WebSocketDialog> wdcollection = new List<WebSocketDialog>();
+        static async Task StartWebSocketAsync()
+        {
+            Console.WriteLine("Starting WebSocket");
+            var server = new RedHttpServer(5001);
+            server.RespondWithExceptionDetails = true;
+
+            async Task Auth(Request req, Response res, WebSocketDialog wsd)
+            {
+
+            }
+
+            server.WebSocket("/echo", Auth, async (req, res, wsd) =>
+            {
+                wdcollection.Add(wsd);
+                await wsd.SendText("Welcome to the echo test server, downloading chain");
+                await DownloadChain();
+                wsd.OnTextReceived += Wsd_OnTextReceived;
+            }, async (req, res, wsd) =>
+            {
+
+            });
+
+            await server.RunAsync();
         }
 
+        private static async Task DownloadChain()
+        {
+            NetworkMessage message = new NetworkMessage();
+            message.MessageSenderIP = IPAddress.Loopback.ToString();
+            message.MessageSenderPort = myPort;
+            message.MessageStateType = MessageType.Connected;
+            message.KnownPeers = new string[] { };
+            message.MessageStateType = MessageType.DownloadChain;
+            await _client.Send(message);
+        }
+
+        private static void Wsd_OnTextReceived(object sender, WebSocketDialog.TextMessageEventArgs e)
+        {
+            //Console.WriteLine(e.Text);
+            Task.Run(async () =>
+            {
+                NetworkMessage message = new NetworkMessage();
+                message.MessageSenderIP = IPAddress.Loopback.ToString();
+                message.MessageSenderPort = myPort;
+                message.MessageStateType = MessageType.Connected;
+                message.KnownPeers = new string[] { };
+                message.MessageStateType = MessageType.AddBlock;
+                message.Block = new Block(Guid.NewGuid().ToString(), "Webserver", e.Text);
+                await _client.Send(message);
+            }).ConfigureAwait(false);
+            Console.WriteLine("Message: {0} from webserver sent to nodes", e.Text);
+        }
+        #endregion
     }
 }

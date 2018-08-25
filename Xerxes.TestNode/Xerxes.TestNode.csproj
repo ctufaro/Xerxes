@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="RHttpServer" Version="3.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Xerxes.Domain\Xerxes.Domain.csproj" />
     <ProjectReference Include="..\Xerxes.P2P\Xerxes.P2P.csproj" />
     <ProjectReference Include="..\Xerxes.TCP\Xerxes.TCP.csproj" />
