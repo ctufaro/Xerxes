@@ -170,7 +170,7 @@ namespace Xerxes.TestNode
             server.WebSocket("/echo", Auth, async (req, res, wsd) =>
             {
                 wdcollection.Add(wsd);
-                await wsd.SendText("Welcome to the echo test server, downloading chain");
+                await wsd.SendText("Welcome to the echo test server, downloading chain...<br>");
                 await DownloadChain();
                 wsd.OnTextReceived += Wsd_OnTextReceived;
             }, async (req, res, wsd) =>
