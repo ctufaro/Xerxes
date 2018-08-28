@@ -102,37 +102,32 @@ namespace Xerxes.P2P
 
             if (message.MessageStateType == MessageType.Connected)
             {   
-                sender.MessageStateType = MessageType.Gab;                
+                sender.MessageStateType = MessageType.HandShake;                
                 NetworkPeer networkPeers = new NetworkPeer(new IPEndPoint(IPAddress.Parse(message.MessageSenderIP), message.MessageSenderPort));
                 var result = this.Peers.AddInboundPeer(networkPeers);
                 this.Peers.CombinePeers(message.KnownPeers);               
                 await receiver.Send(sender, sndrIp);
             }
 
-            if (message.MessageStateType == MessageType.Gab)
+            if (message.MessageStateType == MessageType.HandShake)
             {
-                sender.MessageStateType = MessageType.Gab;
+                sender.MessageStateType = MessageType.HandShake;
                 await receiver.Send(sender, sndrIp);
-            }
-
-            if (message.MessageStateType == MessageType.TurnRed)
-            {
-                sender.MessageStateType = MessageType.TurnRed;
-                if (Console.BackgroundColor != ConsoleColor.Red)
-                {
-                    Console.BackgroundColor = ConsoleColor.Red;
-                    Console.Clear();                    
-                    await this.Peers.Broadcast(sender);
-                }
             }
 
             if (message.MessageStateType == MessageType.AddBlock)
             {                
                 if (!this.BlockChain.ContainsBlock(message.Block))
                 {
-                    this.BlockChain.AddBlock(message.Block);
-                    UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}]", BlockChain.PrintChain());
-                    await this.Peers.Broadcast(message);
+                    Block addedBlock = this.BlockChain.AddBlock(message.Block);
+                    if (addedBlock != null)
+                    {                        
+                        message.Block.Index = addedBlock.Index;
+                        message.Block.TimeStamp = addedBlock.TimeStamp;
+                        //message.Block.PrevHash = addedBlock.PrevHash;
+                        UtilitiesLogger.WriteLine(LoggerType.Info, "Receiver: receiver new block [{0}]", BlockChain.PrintChain());
+                        await this.Peers.Broadcast(message);
+                    }
                 }
             }            
 

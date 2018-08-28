@@ -82,7 +82,8 @@ namespace Xerxes.Domain
 
         public override string ToString()
         {
-            return string.Format("{0} {1} {2} {3} {4} {5}", Index, PrevHash, TimeStamp, Poster, Post, (Guid!=null)?Guid:"");
+            //return string.Format("{0} {1} {2} {3} {4} {5}", Index, PrevHash, TimeStamp, Poster, Post, (Guid!=null)?Guid:"");
+            return string.Format("{0} {1} {2} [{3}: {4}]", Index, PrevHash, TimeStamp, Poster, Post);
         }
     }
 }

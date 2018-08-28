@@ -49,7 +49,7 @@ namespace Xerxes.TestNode
             NetworkMessage message = new NetworkMessage();
             message.MessageSenderIP = IPAddress.Loopback.ToString();
             message.MessageSenderPort = myPort;
-            message.MessageStateType = MessageType.Gab;
+            message.MessageStateType = MessageType.HandShake;
             message.KnownPeers = new string[] { "" };
 
             await SendToServer(message);
@@ -75,20 +75,20 @@ namespace Xerxes.TestNode
 
             if (message.MessageStateType == MessageType.Connected)
             {
-                sender.MessageStateType = MessageType.Gab;
+                sender.MessageStateType = MessageType.HandShake;
                 await _server.Send(sender, sndrIp);
             }
 
-            if (message.MessageStateType == MessageType.Gab)
+            if (message.MessageStateType == MessageType.HandShake)
             {
-                sender.MessageStateType = MessageType.Gab;
+                sender.MessageStateType = MessageType.HandShake;
                 await _server.Send(sender, sndrIp);
             }
 
             if (message.MessageStateType == MessageType.AddBlock)
             {
                 foreach (WebSocketDialog wd in wdcollection)
-                    wd.SendText(message.Block.ToString() + "<br>");                
+                    await wd.SendText(message.Block.ToString() + "<br>");                
             }
 
             Console.WriteLine("Receiver: message ({0}) sent", sender.MessageStateType.ToString());
@@ -162,20 +162,12 @@ namespace Xerxes.TestNode
             var server = new RedHttpServer(5001);
             server.RespondWithExceptionDetails = true;
 
-            async Task Auth(Request req, Response res, WebSocketDialog wsd)
-            {
-
-            }
-
-            server.WebSocket("/echo", Auth, async (req, res, wsd) =>
+            server.WebSocket("/echo", async (req, res, wsd) =>
             {
                 wdcollection.Add(wsd);
                 await wsd.SendText("Welcome to the echo test server, downloading chain...<br>");
                 await DownloadChain();
                 wsd.OnTextReceived += Wsd_OnTextReceived;
-            }, async (req, res, wsd) =>
-            {
-
             });
 
             await server.RunAsync();
@@ -202,8 +194,8 @@ namespace Xerxes.TestNode
                 message.MessageSenderPort = myPort;
                 message.MessageStateType = MessageType.Connected;
                 message.KnownPeers = new string[] { };
-                message.MessageStateType = MessageType.AddBlock;
-                message.Block = new Block(Guid.NewGuid().ToString(), "Webserver", e.Text);
+                message.MessageStateType = MessageType.AddBlock;                
+                message.Block = new Block(Guid.NewGuid().ToString(), "Webserver", e.Text);            
                 await _client.Send(message);
             }).ConfigureAwait(false);
             Console.WriteLine("Message: {0} from webserver sent to nodes", e.Text);

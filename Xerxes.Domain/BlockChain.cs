@@ -50,10 +50,10 @@ namespace Xerxes.Domain
 
         private Block GenerateGenesisBlock()
         {
-            return new Block(0, new DateTime(2013, 7, 22), "Chris", "Rejoice the Genesis Block!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7", ":)");
+            return new Block(0, new DateTime(2013, 7, 22), "Chris", "Rejoice the Genesis Block!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7", Block.RawHash(":)"));
         }
 
-        public bool AddBlock(string post, string poster)
+        public Block AddBlock(string post, string poster)
         {
             Block previousBlock = GetLatestBlock();
             int nextIndex = previousBlock.Index + 1;
@@ -61,20 +61,27 @@ namespace Xerxes.Domain
             string nextHash = Block.HashBlock(nextIndex, previousBlock.Hash, nextTimeStamp, poster, post);
             Block newBlock = new Block(nextIndex, nextTimeStamp, poster, post, nextHash, previousBlock.Hash);
             bool isValidBlock = IsValidNewBlock(newBlock, GetLatestBlock());
-            if(isValidBlock)
+            if (isValidBlock)
+            {
                 MasterChain.Add(newBlock);
-            return isValidBlock;
+                return newBlock;
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        public bool AddBlock(Block newBlock)
+        public Block AddBlock(Block newBlock)
         {
+            Block addedBlock = null;
             string newMsgGuid = newBlock.Guid.ToString();
             if (!messageGuid.ContainsKey(newMsgGuid))
             {
                 messageGuid.Add(newMsgGuid, true);
-                return AddBlock(newBlock.Post, newBlock.Poster);
+                addedBlock = AddBlock(newBlock.Post, newBlock.Poster);
             }
-            return false;
+            return addedBlock;
         }
 
         public bool ContainsBlock(Block newBlock)

@@ -18,7 +18,7 @@ namespace Xerxes.P2P
         /// <summary>Network connection with the peer has been established.</summary>
         Connected,
         /// <summary>The node and the peer exchanged version information.</summary>
-        HandShaked,
+        HandShake,
         /// <summary>Share Peers List.</summary>
         Share,
         /// <summary>Process of disconnecting the peer has been initiated.</summary>
@@ -27,11 +27,8 @@ namespace Xerxes.P2P
         Offline,
         /// <summary>An error occurred during a network operation.</summary>
         Failed,
-        /// <summary>Gab</summary>
-        Gab,
         /// <summary> Not Accepting Connections</summary>
         NotAccepting,
-        TurnRed,
         DownloadChain,
         AddBlock,
         RequestAge
