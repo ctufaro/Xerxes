@@ -15,6 +15,7 @@
     <script type="text/javascript">
 
         function WebSocketTest() {
+            var index = -1;
 
             if ("WebSocket" in window) {
                 //alert("WebSocket is supported by your Browser!");
@@ -34,7 +35,13 @@
 
                 ws.onmessage = function (evt) {
                     //var received_msg = evt.data;
-                    $("#messages").append(evt.data);
+                    //$("#messages").append(evt.data);
+                    var block = JSON.parse(evt.data);
+                    if (parseInt(block.Index) > index) {
+                        index = parseInt(block.Index);
+                        $("#messages").append(evt.data + "<br>")
+                    }
+                    console.log(block);
                     //alert("Message is received...");
                 };
 

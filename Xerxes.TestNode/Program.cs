@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Red;
 using Xerxes.Domain;
 using Xerxes.P2P;
@@ -88,7 +89,15 @@ namespace Xerxes.TestNode
             if (message.MessageStateType == MessageType.AddBlock)
             {
                 foreach (WebSocketDialog wd in wdcollection)
-                    await wd.SendText(message.Block.ToString() + "<br>");                
+                {
+                    if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                    {
+                        Block b = message.Block;
+                        DownChain.MasterChain.Add(b);
+                        string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
+                        await wd.SendText(json);
+                    }
+                }
             }
 
             Console.WriteLine("Receiver: message ({0}) sent", sender.MessageStateType.ToString());
@@ -120,10 +129,6 @@ namespace Xerxes.TestNode
             await _client.Connect(true);
             Console.WriteLine("Connected!");
             await _client.Send(message);
-
-            message.MessageStateType = MessageType.AddBlock;
-            message.Block = new Block(Guid.NewGuid().ToString(), "Teddy", "haboo");
-            await _client.Send(message);
         }
 
         private static async Task SendToServer(NetworkMessage message)
@@ -142,10 +147,17 @@ namespace Xerxes.TestNode
             Console.WriteLine($"{sender} {message.MessageStateType.ToString()}");
             if (message.MessageStateType == MessageType.DownloadChain)
             {
-                foreach(Block b in message.BlockChain)
+                DownChain = message.BlockChain;
+                foreach (Block b in message.BlockChain)
                 {
-                    foreach(WebSocketDialog wd in wdcollection)
-                        wd.SendText(b.ToString()+"<br>");
+                    foreach (WebSocketDialog wd in wdcollection)
+                    {
+                        if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                        {
+                            string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
+                            wd.SendText(json);
+                        }
+                    }
                 }                
             }
             
@@ -154,23 +166,43 @@ namespace Xerxes.TestNode
         }
         #endregion
 
-        #region WebSocket
+        #region WebSocket https://github.com/rosenbjerg/Red
         private static List<WebSocketDialog> wdcollection = new List<WebSocketDialog>();
+        private static BlockChain DownChain = new BlockChain();
+        
         static async Task StartWebSocketAsync()
         {
             Console.WriteLine("Starting WebSocket");
             var server = new RedHttpServer(5001);
+            DownChain.MasterChain = new List<Block>();
             server.RespondWithExceptionDetails = true;
-
             server.WebSocket("/echo", async (req, res, wsd) =>
             {
                 wdcollection.Add(wsd);
                 await wsd.SendText("Welcome to the echo test server, downloading chain...<br>");
-                await DownloadChain();
+                if (DownChain.Count() == 0)
+                {
+                    await DownloadChain();
+                }
+                else
+                {
+                    foreach (Block b in DownChain)
+                    {
+                        foreach (WebSocketDialog wd in wdcollection)
+                        {
+                            if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                            {
+                                string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
+                                await wd.SendText(json);
+                            }
+                        }
+                    }
+                }
                 wsd.OnTextReceived += Wsd_OnTextReceived;
             });
 
             await server.RunAsync();
+            //await server.RunAsync(new string[] { "192.168.78.135" });
         }
 
         private static async Task DownloadChain()
