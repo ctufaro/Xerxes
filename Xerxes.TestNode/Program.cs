@@ -21,6 +21,7 @@ namespace Xerxes.TestNode
 
         private static int myPort = 2000;
         private static int infectPort = 1233;
+        private static string webSocketIP = "192.168.78.135"; //c-192.168.1.5 m-192.168.78.135
 
         #region TCP
         static void Main(string[] args)
@@ -93,6 +94,7 @@ namespace Xerxes.TestNode
                     if (wd.UnderlyingWebSocket.State == System.Net.WebSockets.WebSocketState.Open)
                     {
                         Block b = message.Block;
+                        b.PrevHash = Xerxes.Domain.Block.RawHash(b.Post + b.Poster);
                         DownChain.MasterChain.Add(b);
                         string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
                         await wd.SendText(json);
@@ -200,9 +202,7 @@ namespace Xerxes.TestNode
                 wsd.OnTextReceived += Wsd_OnTextReceived;
             });
 
-            //await server.RunAsync();
-            await server.RunAsync(new string[] { "192.168.1.5" });
-            //await server.RunAsync(new string[] { "192.168.78.135" });
+            await server.RunAsync(new string[] { webSocketIP });
         }
 
         private static async Task DownloadChain()
@@ -221,13 +221,15 @@ namespace Xerxes.TestNode
             //Console.WriteLine(e.Text);
             Task.Run(async () =>
             {
+                var nameGen = new RandomNameGeneratorLibrary.PersonNameGenerator();
+                var name = nameGen.GenerateRandomFirstAndLastName();
                 NetworkMessage message = new NetworkMessage();
                 message.MessageSenderIP = IPAddress.Loopback.ToString();
                 message.MessageSenderPort = myPort;
                 message.MessageStateType = MessageType.Connected;
                 message.KnownPeers = new string[] { };
-                message.MessageStateType = MessageType.AddBlock;                
-                message.Block = new Block(Guid.NewGuid().ToString(), "Webserver", e.Text);            
+                message.MessageStateType = MessageType.AddBlock;                 
+                message.Block = new Block(Guid.NewGuid().ToString(), name, e.Text);            
                 await _client.Send(message);
             }).ConfigureAwait(false);
             Console.WriteLine("Message: {0} from webserver sent to nodes", e.Text);

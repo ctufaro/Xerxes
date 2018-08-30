@@ -110,18 +110,25 @@ namespace Xerxes.P2P
 
             if (this.ElderNodes.Count > 0 && this.BlockChain.Count() == 1)
             {
+                ProtoClient<NetworkMessage> client;
                 NetworkMessage message = new NetworkMessage { MessageSenderIP = this.LocalEndpoint.Address.ToString(), MessageSenderPort = this.netConfig.ReceivePort, MessageStateType = MessageType.DownloadChain };
-                ProtoClient<NetworkMessage> client = this.Peers.GetPeer(this.ElderNodes.First().Value.ToString()).ProtoClient;
-                await client.Send(message);
+                if (this.Peers.GetPeer(this.ElderNodes.First().Value.ToString()) != null)
+                {
+                    client = this.Peers.GetPeer(this.ElderNodes.First().Value.ToString()).ProtoClient;
+                    await client.Send(message);
+                }
             }
 
         }
 
         private void ProtoClient_ConnectionLost(IPEndPoint endPoint)
         {
-            this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
-            this.Peers.RemovePeer(endPoint);
-            UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: destroyed socket on {0}", endPoint.ToString());
+            if (this.Peers.GetPeer(endPoint.ToString()) != null)
+            {
+                this.Peers.GetPeer(endPoint.ToString()).ProtoClient.AutoReconnect = false;
+                this.Peers.RemovePeer(endPoint);
+                UtilitiesLogger.WriteLine(LoggerType.Info, "Seeker: destroyed socket on {0}", endPoint.ToString());
+            }
         }
 
         private void ClientReceivedMessage(IPEndPoint senderEndPoint, NetworkMessage message)

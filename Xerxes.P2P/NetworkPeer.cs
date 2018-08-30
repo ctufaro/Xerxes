@@ -98,7 +98,10 @@ namespace Xerxes.P2P
 
         public NetworkPeer GetPeer(string ipEndPoint)
         {
-            return this.peers[ipEndPoint];
+            if (this.peers.ContainsKey(ipEndPoint))
+                return this.peers[ipEndPoint];
+            else
+                return null;
         }
 
         public void RemovePeer(IPEndPoint ipEndPoint)
