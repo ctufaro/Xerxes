@@ -90,7 +90,7 @@ namespace Xerxes.TestNode
             {
                 foreach (WebSocketDialog wd in wdcollection)
                 {
-                    if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                    if (wd.UnderlyingWebSocket.State == System.Net.WebSockets.WebSocketState.Open)
                     {
                         Block b = message.Block;
                         DownChain.MasterChain.Add(b);
@@ -152,7 +152,7 @@ namespace Xerxes.TestNode
                 {
                     foreach (WebSocketDialog wd in wdcollection)
                     {
-                        if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                        if (wd.UnderlyingWebSocket.State == System.Net.WebSockets.WebSocketState.Open)
                         {
                             string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
                             wd.SendText(json);
@@ -166,7 +166,7 @@ namespace Xerxes.TestNode
         }
         #endregion
 
-        #region WebSocket https://github.com/rosenbjerg/Red
+        #region WebSocket https://github.com/rosenbjerg/Red https://www.yougetsignal.com
         private static List<WebSocketDialog> wdcollection = new List<WebSocketDialog>();
         private static BlockChain DownChain = new BlockChain();
         
@@ -179,7 +179,6 @@ namespace Xerxes.TestNode
             server.WebSocket("/echo", async (req, res, wsd) =>
             {
                 wdcollection.Add(wsd);
-                await wsd.SendText("Welcome to the echo test server, downloading chain...<br>");
                 if (DownChain.Count() == 0)
                 {
                     await DownloadChain();
@@ -190,7 +189,7 @@ namespace Xerxes.TestNode
                     {
                         foreach (WebSocketDialog wd in wdcollection)
                         {
-                            if (wd.UnderlyingWebSocket.State != System.Net.WebSockets.WebSocketState.Closed)
+                            if (wd.UnderlyingWebSocket.State == System.Net.WebSockets.WebSocketState.Open)
                             {
                                 string json = JsonConvert.SerializeObject(new { Index = b.Index, Prevhash = b.PrevHash, TimeStamp = b.TimeStamp, Poster = b.Poster, Post = b.Post });
                                 await wd.SendText(json);
@@ -201,7 +200,8 @@ namespace Xerxes.TestNode
                 wsd.OnTextReceived += Wsd_OnTextReceived;
             });
 
-            await server.RunAsync();
+            //await server.RunAsync();
+            await server.RunAsync(new string[] { "192.168.1.5" });
             //await server.RunAsync(new string[] { "192.168.78.135" });
         }
 

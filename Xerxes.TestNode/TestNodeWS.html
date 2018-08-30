@@ -21,7 +21,7 @@
                 //alert("WebSocket is supported by your Browser!");
 
                 // Let us open a web socket
-                var ws = new WebSocket("ws://localhost:5001/echo");
+                var ws = new WebSocket("ws://192.168.1.5:5001/echo");
                 $("#btnSend").css("background-color", "green");
 
                 ws.onopen = function () {
@@ -41,7 +41,6 @@
                         index = parseInt(block.Index);
                         $("#messages").append(evt.data + "<br>")
                     }
-                    console.log(block);
                     //alert("Message is received...");
                 };
 

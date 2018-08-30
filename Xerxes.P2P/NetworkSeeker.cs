@@ -50,8 +50,6 @@ namespace Xerxes.P2P
             this.ElderNodes = new SortedDictionary<DateTime, IPEndPoint>();
         }
 
-        public bool TurnColor = false;
-
         public async Task SeekPeersAsync()
         {
             try
