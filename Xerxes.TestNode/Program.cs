@@ -21,7 +21,7 @@ namespace Xerxes.TestNode
 
         private static int myPort = 2000;
         private static int infectPort = 1233;
-        private static string webSocketIP = "192.168.78.135"; //c-192.168.1.5 m-192.168.78.135
+        private static string webSocketIP = "192.168.1.5"; //c-192.168.1.5 m-192.168.78.135
 
         #region TCP
         static void Main(string[] args)
